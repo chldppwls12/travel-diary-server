@@ -1,7 +1,7 @@
 import { PrismaService } from '../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { SignUpRequestDto } from '../../auth/dto/signup-request.dto';
-import { Status } from '@prisma/client';
+import { Status, User } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -24,5 +24,14 @@ export class UserRepository {
         },
       })
     ).id;
+  }
+
+  async findUserByEmail(email: string): Promise<User | null> {
+    return this.prisma.user.findFirst({
+      where: {
+        email,
+        status: Status.NORMAL,
+      },
+    });
   }
 }
