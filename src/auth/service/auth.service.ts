@@ -14,6 +14,7 @@ import { TokensResponseDto } from '../dto/tokens-response.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CacheService } from '../../cache/service/cache.service';
 import { RedisKey } from '../../common/enum/redis-key';
+import { CurrentUserDto } from '../../common/dto/current-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -79,5 +80,25 @@ export class AuthService {
         expiresIn: 1209600000,
       }),
     };
+  }
+
+  async reissueTokens(user: CurrentUserDto): Promise<any> {
+    const { userId } = user;
+
+    if (!userId) {
+      throw new UnauthorizedException(ErrMessage.INVALID_TOKEN);
+    }
+
+    // 해당 refresh token이 redis에 존재하는지 확인
+    if (
+      !(await this.cacheService.get(`${RedisKey.REFRESH_TOKEN_KEY}:${userId}`))
+    ) {
+      throw new UnauthorizedException(ErrMessage.INVALID_TOKEN);
+    }
+
+    return this.signTokens({
+      userId,
+      email: user.email,
+    });
   }
 }

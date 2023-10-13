@@ -8,6 +8,7 @@ import {
 import { AuthService } from '../service/auth.service';
 import { SignUpRequestDto } from '../dto/signup-request.dto';
 import {
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOperation,
@@ -18,6 +19,8 @@ import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { LoginRequestDto } from '../dto/login-request.dto';
 import { LocalAuthGuard } from '../guard/local-auth.guard';
 import { TokensResponseDto } from '../dto/tokens-response.dto';
+import { JwtAuthGuard } from '../guard/jwt-auth.guard';
+import { CurrentUser } from '../decorator/current-user.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -52,5 +55,22 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   async login(@Body() requestDto: LoginRequestDto): Promise<TokensResponseDto> {
     return this.authService.login(requestDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '토큰 재발급 API' })
+  @ApiCreatedResponse({
+    status: 201,
+    description: '토큰 재발급 성공',
+    type: TokensResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: '유효하지 않은 토큰',
+  })
+  @Post('refresh')
+  @UseGuards(JwtAuthGuard)
+  async reissueTokens(@CurrentUser() user): Promise<TokensResponseDto> {
+    return this.authService.reissueTokens(user);
   }
 }

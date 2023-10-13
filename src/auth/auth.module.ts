@@ -8,6 +8,7 @@ import { PassportModule } from '@nestjs/passport';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CacheService } from '../cache/service/cache.service';
 import { LocalStrategy } from './strategy/local.strategy';
+import { JwtStrategy } from './strategy/jwt.strategy';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { LocalStrategy } from './strategy/local.strategy';
     PrismaService,
     CacheService,
     LocalStrategy,
+    JwtStrategy,
   ],
 })
 export class AuthModule {}
