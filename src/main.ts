@@ -8,10 +8,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ErrMessage } from './common/enum/err-message';
+import { ExceptionInterceptor } from './common/interceptor/exception.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
+  app.useGlobalInterceptors(new ExceptionInterceptor());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

@@ -5,11 +5,11 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
 import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { ExceptionInterceptor } from '../../common/interceptor/exception.interceptor';
 
-@UseInterceptors(ExceptionInterceptor)
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
