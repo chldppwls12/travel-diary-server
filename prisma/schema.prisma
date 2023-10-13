@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum FileType {
+  IMAGE
+  VOICE
+  VIDEO
+}
+
+enum Status {
+  NORMAL
+  DELETED
+}
+
+enum Feeling {
+  HAPPY
+  CALM
+  SATISFIED
+  EXCITING
+  ANGRY
+  SAD
+}
+
+enum Weather {
+  SUNNY
+  PARTLY_CLOUDY
+  CLOUDY
+  STORMY
+  RAINY
+  SNOWY
+  WINDY
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique @db.VarChar(30)
+  password  String   @db.VarChar(300)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  status    Status   @default(NORMAL)
+  records   Record[]
+}
+
+model Record {
+  id         String       @id @default(uuid())
+  content    String       @db.Text()
+  weather    Weather
+  feeling    Feeling
+  createdAt  DateTime     @default(now()) @map("created_at")
+  recordDate DateTime
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+  status     Status       @default(NORMAL)
+  user       User         @relation(fields: [userId], references: [id])
+  userId     String
+  city       City         @relation(fields: [cityId], references: [id])
+  cityId     Int          @map("city_id")
+  files      RecordFile[]
+}
+
+model File {
+  id           String       @id @default(uuid())
+  type         FileType
+  originalName String       @map("original_name") @db.VarChar(100)
+  uploadedLink String       @map("uploaded_link") @db.VarChar(1000)
+  shortLink    String       @map("short_link") @db.VarChar(100)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  status       Status       @default(NORMAL)
+  records      RecordFile[]
+}
+
+model RecordFile {
+  record   Record   @relation(fields: [recordId], references: [id])
+  recordId String   @map("record_id")
+  file     File     @relation(fields: [fileId], references: [id])
+  fileId   String   @map("file_id")
+  type     FileType
+
+  @@id([recordId, fileId])
+}
+
+model Location {
+  id String @id @default(uuid())
+  do String @db.VarChar(10)
+  si String @db.VarChar(15)
+  gu String @db.VarChar(15)
+
+  @@unique([do, si, gu])
+}
+
+model City {
+  id      Int      @id
+  name    String   @db.VarChar(10)
+  records Record[]
+}
