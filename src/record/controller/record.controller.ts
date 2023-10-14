@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -19,6 +20,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
@@ -27,6 +29,8 @@ import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { FindRecordResponseDto } from '../dto/find-record-response.dto';
 import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
 import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
+import { FindMapQueryDto } from '../dto/find-map-query.dto';
+import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
 
 @ApiTags('record')
 @Controller('record')
@@ -53,13 +57,31 @@ export class RecordController {
   @ApiOperation({ summary: '일기 지도 형식 조회 API' })
   @ApiOkResponse({
     status: 200,
-    description: '일기 조회 성공',
-    // type: FindRecordResponseDto,
+    description: '일기 지도 형식 조회 성공',
   })
   @UseGuards(JwtAuthGuard)
   @Get('/map')
-  async findAllWithMap(@CurrentUser() user: TokenPayloadDto): Promise<any> {
-    return await this.recordService.findAllWithMap(user.userId);
+  async findAllWithMap(
+    @Query() queryDto: FindMapQueryDto,
+    @CurrentUser() user: TokenPayloadDto,
+  ): Promise<any> {
+    // TODO: 변경 필요
+    if (queryDto?.groupId) {
+      queryDto.groupId = +queryDto.groupId;
+    }
+    if (queryDto?.provinceId) {
+      queryDto.provinceId = +queryDto.provinceId;
+    }
+    if (queryDto?.cityId) {
+      queryDto.cityId = +queryDto.cityId;
+    }
+    if (queryDto?.offset) {
+      queryDto.offset = +queryDto.offset;
+    }
+    if (queryDto?.page) {
+      queryDto.page = +queryDto.page;
+    }
+    return await this.recordService.findAllWithMap(user.userId, queryDto);
   }
 
   @ApiBearerAuth()

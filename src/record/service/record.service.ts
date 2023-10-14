@@ -9,11 +9,14 @@ import { FileRepository } from '../../file/repository/file.repository';
 import { ErrMessage } from '../../common/enum/err-message';
 import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { FindRecordResponseDto } from '../dto/find-record-response.dto';
-import { FileType, Record } from '@prisma/client';
+import { City, FileType, Record } from '@prisma/client';
 import { RecordMediaResponseDto } from '../dto/record-media-response.dto';
 import { RecordVoiceResponseDto } from '../dto/record-voice-response.dto';
 import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
 import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
+import { FindMapQueryDto } from '../dto/find-map-query.dto';
+import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
+import { LastImageResponseDto } from '../dto/map/last-image-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -225,15 +228,51 @@ export class RecordService {
     await this.recordRepository.delete(recordId);
   }
 
-  async findAllWithMap(userId: string): Promise<any> {
-    // TODO: 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
-    return await this.findFullMap(userId);
+  async findAllWithMap(
+    userId: string,
+    queryDto: FindMapQueryDto,
+  ): Promise<any> {
+    // 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
+    if (!queryDto?.provinceId && !queryDto?.groupId && !queryDto?.cityId) {
+      return await this.findFullMap(userId);
+    }
+
     // TODO: provinceId 넣었을 때 특정 위치 조회 -> 각각의 group마다 최근 작성 글 1개 씩
-    // await this.findMapByProvince();
-    // TODO: groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
-    // await this.findMapByGroup();
+    if (queryDto.provinceId) {
+      const groupIds = (
+        await this.recordRepository.findGroupsByProvinceId(queryDto.provinceId)
+      ).map((group) => group.groupId);
+
+      for (const groupId of groupIds) {
+        // TODO: 각각의 group마다 실행하기
+        await this.findMapByProvince(userId, groupId);
+      }
+    }
+
+    // groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
+    if (queryDto.groupId) {
+      // groupId에 해당하는 cityId 가져오기
+      const cities = await this.recordRepository.findCitiesByGroupId(
+        queryDto.groupId,
+      );
+      return await this.findMapByGroup(
+        userId,
+        cities.map((city) => city.id),
+      );
+    }
+
     // TODO: cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
-    // await this.findMapByCity();
+    if (queryDto.cityId) {
+      if (!queryDto?.page || !queryDto?.offset) {
+        throw new BadRequestException(ErrMessage.INVALID_PARAM);
+      }
+      return await this.findMapByCity(
+        userId,
+        queryDto.cityId,
+        queryDto.page,
+        queryDto.offset,
+      );
+    }
   }
 
   async findFullMap(userId: string): Promise<{ data: FullMapResponseDto[] }> {
@@ -241,27 +280,88 @@ export class RecordService {
 
     const data: FullMapResponseDto[] = [];
     for (const record of records) {
-      // TODO: 동영상일 때 생각 필요
-      const firstImageId = await this.recordRepository.findFirstImageId(
-        record.id,
-      );
-
-      let image = null;
-      if (firstImageId) {
-        const imageInfo = await this.fileRepository.findById(firstImageId);
-        if (imageInfo) {
-          image = {
-            originName: imageInfo?.originalName,
-            uploadedLink: imageInfo?.uploadedLink,
-            shortLink: imageInfo?.shortLink,
-          };
-        }
-      }
-
       data.push({
         id: record.id,
-        image,
+        image: await this.findRecordThumbnail(record.id),
         provinceId: record.provinceId,
+      });
+    }
+
+    return {
+      data,
+    };
+  }
+
+  async findMapByProvince(userId: string, provinceId: number) {
+    const records = await this.recordRepository.findMapByProvince(
+      userId,
+      provinceId,
+    );
+  }
+
+  async findMapByGroup(
+    userId: string,
+    cityIds: number[],
+  ): Promise<{ data: CityMapResponseDto[] }> {
+    const records = await this.recordRepository.findAllByCityIds(
+      userId,
+      cityIds,
+    );
+
+    const data: CityMapResponseDto[] = [];
+    for (const record of records) {
+      data.push({
+        id: record.id,
+        image: await this.findRecordThumbnail(record.id),
+        cityId: record.cityId,
+      });
+    }
+
+    return {
+      data,
+    };
+  }
+
+  // TODO: 동영상일 때 생각 필요
+  async findRecordThumbnail(
+    recordId: string,
+  ): Promise<LastImageResponseDto | null> {
+    const firstImageId = await this.recordRepository.findFirstImageId(recordId);
+
+    let image = null;
+    if (firstImageId) {
+      const imageInfo = await this.fileRepository.findById(firstImageId);
+      if (imageInfo) {
+        image = {
+          originName: imageInfo?.originalName,
+          uploadedLink: imageInfo?.uploadedLink,
+          shortLink: imageInfo?.shortLink,
+        };
+      }
+    }
+
+    return image;
+  }
+
+  async findMapByCity(
+    userId: string,
+    cityId: number,
+    page: number,
+    offset: number,
+  ): Promise<{ data: CityMapResponseDto[] }> {
+    const records = await this.recordRepository.findAllbyCityId(
+      userId,
+      cityId,
+      page,
+      offset,
+    );
+
+    const data: CityMapResponseDto[] = [];
+    for (const record of records) {
+      data.push({
+        id: record.id,
+        image: await this.findRecordThumbnail(record.id),
+        cityId: record.cityId,
       });
     }
 

@@ -143,7 +143,7 @@ export class RecordRepository {
   }
 
   async findFullMap(userId: string): Promise<Record[]> {
-    // TODO: record에서 provinceId 별로 createdAt이 가장 최근 것인 일기 가져오기
+    // record에서 provinceId 별로 createdAt이 가장 최근 것인 일기 가져오기
     return this.prisma.$queryRaw`
       SELECT id, province_id AS provinceId, MAX(created_at) AS maxCreatedAt
       FROM Record
@@ -162,5 +162,67 @@ export class RecordRepository {
         },
       })
     )?.fileId;
+  }
+
+  async findMapByProvince(userId: string, provinceId: number) {
+    // 각각의 group마다 최근 작성 글 1개 씩
+    await this.prisma.record.findMany({
+      where: {
+        userId,
+        provinceId,
+        status: Status.NORMAL,
+      },
+    });
+  }
+
+  async findGroupsByProvinceId(provinceId: number) {
+    return this.prisma.provinceGroup.findMany({
+      select: {
+        groupId: true,
+      },
+      where: {
+        provinceId,
+      },
+    });
+  }
+
+  async findCitiesByGroupId(groupId: number) {
+    return this.prisma.city.findMany({
+      where: {
+        groupId,
+      },
+    });
+  }
+
+  async findAllByCityIds(userId: string, cityIds: number[]): Promise<Record[]> {
+    return this.prisma.record.findMany({
+      where: {
+        userId,
+        cityId: {
+          in: cityIds,
+        },
+        status: Status.NORMAL,
+      },
+    });
+  }
+
+  async findAllbyCityId(
+    userId: string,
+    cityId: number,
+    page: number,
+    offset: number,
+  ) {
+    return this.prisma.record.findMany({
+      where: {
+        userId,
+        cityId,
+        status: Status.NORMAL,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip: (page - 1) * offset,
+      take: offset,
+    });
   }
 }
