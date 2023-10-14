@@ -17,8 +17,8 @@ import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { UserService } from '../service/user.service';
 import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
 
-@ApiTags('user')
-@Controller('user')
+@ApiTags('users')
+@Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
   @ApiBearerAuth()

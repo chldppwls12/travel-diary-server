@@ -32,8 +32,8 @@ import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
 import { FindMapQueryDto } from '../dto/find-map-query.dto';
 import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
 
-@ApiTags('record')
-@Controller('record')
+@ApiTags('records')
+@Controller('records')
 export class RecordController {
   constructor(private recordService: RecordService) {}
 
