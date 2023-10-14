@@ -6,6 +6,8 @@ import { RedisModule } from '@liaoliaots/nestjs-redis';
 import { CacheConfigService } from './cache/cache.config';
 import { MailModule } from './mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
+import { RecordModule } from './record/record.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { ConfigModule } from '@nestjs/config';
       useClass: CacheConfigService,
     }),
     MailModule,
+    RecordModule,
+    FileModule,
   ],
 })
 export class AppModule {}
