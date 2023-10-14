@@ -1,8 +1,7 @@
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateRecordDto } from '../dto/create-record.dto';
-import { Status, Record, FileType, Prisma } from '@prisma/client';
+import { Status, Record, FileType, Prisma, RecordFile } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
-import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
 import { UpdateRecordDto } from '../dto/update-record.dto';
 
 @Injectable()
@@ -141,5 +140,27 @@ export class RecordRepository {
         status: Status.DELETED,
       },
     });
+  }
+
+  async findFullMap(userId: string): Promise<Record[]> {
+    // TODO: record에서 provinceId 별로 createdAt이 가장 최근 것인 일기 가져오기
+    return this.prisma.$queryRaw`
+      SELECT id, province_id AS provinceId, MAX(created_at) AS maxCreatedAt
+      FROM Record
+      WHERE status = ${Status.NORMAL} AND userId = ${userId}
+      GROUP BY province_id
+  `;
+  }
+
+  async findFirstImageId(recordId: string): Promise<string | null> {
+    return (
+      await this.prisma.recordFile.findFirst({
+        where: {
+          recordId,
+          type: FileType.IMAGE,
+          order: 1,
+        },
+      })
+    )?.fileId;
   }
 }

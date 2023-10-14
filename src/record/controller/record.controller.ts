@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
@@ -25,6 +26,7 @@ import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
 import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { FindRecordResponseDto } from '../dto/find-record-response.dto';
 import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
+import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
 
 @ApiTags('record')
 @Controller('record')
@@ -48,10 +50,23 @@ export class RecordController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: '일기 조회 API' })
+  @ApiOperation({ summary: '일기 지도 형식 조회 API' })
   @ApiOkResponse({
     status: 200,
     description: '일기 조회 성공',
+    // type: FindRecordResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('/map')
+  async findAllWithMap(@CurrentUser() user: TokenPayloadDto): Promise<any> {
+    return await this.recordService.findAllWithMap(user.userId);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '일기 상세 조회 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: '일기 상세 조회 성공',
     type: FindRecordResponseDto,
   })
   @UseGuards(JwtAuthGuard)
@@ -95,7 +110,7 @@ export class RecordController {
   async delete(
     @Param('recordId') recordId: string,
     @CurrentUser() user: TokenPayloadDto,
-  ) {
+  ): Promise<void> {
     return await this.recordService.delete(user.userId, recordId);
   }
 }

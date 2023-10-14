@@ -9,10 +9,11 @@ import { FileRepository } from '../../file/repository/file.repository';
 import { ErrMessage } from '../../common/enum/err-message';
 import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { FindRecordResponseDto } from '../dto/find-record-response.dto';
-import { FileType } from '@prisma/client';
+import { FileType, Record } from '@prisma/client';
 import { RecordMediaResponseDto } from '../dto/record-media-response.dto';
 import { RecordVoiceResponseDto } from '../dto/record-voice-response.dto';
 import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
+import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -222,5 +223,50 @@ export class RecordService {
     await this.isAuthor(userId, recordId);
 
     await this.recordRepository.delete(recordId);
+  }
+
+  async findAllWithMap(userId: string): Promise<any> {
+    // TODO: 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
+    return await this.findFullMap(userId);
+    // TODO: provinceId 넣었을 때 특정 위치 조회 -> 각각의 group마다 최근 작성 글 1개 씩
+    // await this.findMapByProvince();
+    // TODO: groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
+    // await this.findMapByGroup();
+    // TODO: cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
+    // await this.findMapByCity();
+  }
+
+  async findFullMap(userId: string): Promise<{ data: FullMapResponseDto[] }> {
+    const records = await this.recordRepository.findFullMap(userId);
+
+    const data: FullMapResponseDto[] = [];
+    for (const record of records) {
+      // TODO: 동영상일 때 생각 필요
+      const firstImageId = await this.recordRepository.findFirstImageId(
+        record.id,
+      );
+
+      let image = null;
+      if (firstImageId) {
+        const imageInfo = await this.fileRepository.findById(firstImageId);
+        if (imageInfo) {
+          image = {
+            originName: imageInfo?.originalName,
+            uploadedLink: imageInfo?.uploadedLink,
+            shortLink: imageInfo?.shortLink,
+          };
+        }
+      }
+
+      data.push({
+        id: record.id,
+        image,
+        provinceId: record.provinceId,
+      });
+    }
+
+    return {
+      data,
+    };
   }
 }
