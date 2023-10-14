@@ -8,4 +8,5 @@ export class CreateRecordDto {
   content: string;
   cityId: number;
   place: string | undefined;
+  provinceId: number;
 }

@@ -83,6 +83,16 @@ export class RecordRepository {
     }));
   }
 
+  async findProvinceIdByCityId(cityId: number): Promise<number | null> {
+    return (
+      await this.prisma.city.findFirst({
+        where: {
+          id: cityId,
+        },
+      })
+    )?.provinceId;
+  }
+
   async findById(
     recordId: string,
   ): Promise<Prisma.RecordGetPayload<{ include: { files: true } }>> {
@@ -106,13 +116,18 @@ export class RecordRepository {
     });
   }
 
-  async update(recordId: string, requestDto: UpdateRecordDto): Promise<void> {
+  async update(
+    recordId: string,
+    requestDto: UpdateRecordDto,
+    provinceId?: number,
+  ): Promise<void> {
     await this.prisma.record.update({
       where: {
         id: recordId,
       },
       data: {
         ...requestDto,
+        provinceId,
       },
     });
   }

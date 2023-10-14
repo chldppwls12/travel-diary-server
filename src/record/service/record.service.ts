@@ -39,7 +39,7 @@ export class RecordService {
 
   async validateCityId(cityId: number): Promise<void> {
     if (!(await this.recordRepository.isExistCityId(cityId))) {
-      throw new BadRequestException(ErrMessage.INVALID_PARAM);
+      throw new BadRequestException(ErrMessage.INVALID_CITY_ID);
     }
   }
 
@@ -53,6 +53,17 @@ export class RecordService {
     if (!(await this.recordRepository.isUserRecord(userId, recordId))) {
       throw new UnauthorizedException(ErrMessage.UNAUTHORIZED);
     }
+  }
+
+  async findProvinceIdByCityId(cityId: number): Promise<number> {
+    const provinceId = await this.recordRepository.findProvinceIdByCityId(
+      cityId,
+    );
+    if (!provinceId) {
+      throw new BadRequestException(ErrMessage.INVALID_PARAM);
+    }
+
+    return provinceId;
   }
 
   async create(
@@ -71,7 +82,7 @@ export class RecordService {
     const { feeling, weather, content, cityId } = requestDto;
     const place = requestDto?.place ? requestDto.place : undefined;
 
-    await this.validateCityId(cityId);
+    const provinceId = await this.findProvinceIdByCityId(cityId);
 
     const createdRecordId = await this.recordRepository.create({
       userId,
@@ -81,6 +92,7 @@ export class RecordService {
       content,
       cityId,
       place,
+      provinceId,
     });
 
     // medias -> 사진, 비디오 추가
@@ -184,6 +196,8 @@ export class RecordService {
     await this.isExist(recordId);
     await this.isAuthor(userId, recordId);
 
+    let provinceId = undefined;
+
     if (requestDto?.medias) {
       await this.validateMediaFiles(requestDto.medias);
       for (const mediaId of requestDto.medias) {
@@ -197,10 +211,10 @@ export class RecordService {
       delete requestDto.voice;
     }
     if (requestDto?.cityId) {
-      await this.validateCityId(requestDto.cityId);
+      provinceId = await this.findProvinceIdByCityId(requestDto.cityId);
     }
 
-    await this.recordRepository.update(recordId, requestDto);
+    await this.recordRepository.update(recordId, requestDto, provinceId);
   }
 
   async delete(userId: string, recordId: string): Promise<void> {
