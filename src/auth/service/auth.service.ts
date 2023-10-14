@@ -15,6 +15,9 @@ import { JwtService } from '@nestjs/jwt';
 import { CacheService } from '../../cache/service/cache.service';
 import { RedisKey } from '../../common/enum/redis-key';
 import { CurrentUserDto } from '../../common/dto/current-user.dto';
+import { SendCodeRequestDto } from '../dto/send-code-request.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { MailService } from '../../mail/service/mail.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,7 @@ export class AuthService {
     private userRepository: UserRepository,
     private jwtService: JwtService,
     private cacheService: CacheService,
+    private mailService: MailService,
   ) {}
   async signup(requestDto: SignUpRequestDto): Promise<IdResponseDto> {
     if (await this.userRepository.isExistEmail(requestDto.email)) {
@@ -70,6 +74,17 @@ export class AuthService {
     );
 
     return tokens;
+  }
+
+  async sendCode(requestDto: SendCodeRequestDto): Promise<any> {
+    const { email } = requestDto;
+
+    const randomCode = await this.mailService.sendCode(email);
+    await this.cacheService.set(
+      `${RedisKey.EMAIL_CODE_KEY}:${email}`,
+      randomCode.toString(),
+      60 * 3,
+    );
   }
 
   async signTokens(payload: TokensRequestDto): Promise<TokensResponseDto> {

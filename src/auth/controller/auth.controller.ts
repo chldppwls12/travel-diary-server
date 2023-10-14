@@ -21,6 +21,7 @@ import { LocalAuthGuard } from '../guard/local-auth.guard';
 import { TokensResponseDto } from '../dto/tokens-response.dto';
 import { JwtAuthGuard } from '../guard/jwt-auth.guard';
 import { CurrentUser } from '../decorator/current-user.decorator';
+import { SendCodeRequestDto } from '../dto/send-code-request.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -55,6 +56,16 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   async login(@Body() requestDto: LoginRequestDto): Promise<TokensResponseDto> {
     return this.authService.login(requestDto);
+  }
+
+  @Post('code')
+  @ApiOperation({ summary: '인증번호 발송 API' })
+  @ApiCreatedResponse({
+    status: 201,
+    description: '인증번호 발송 성공',
+  })
+  async sendCode(@Body() requestDto: SendCodeRequestDto): Promise<void> {
+    await this.authService.sendCode(requestDto);
   }
 
   @ApiBearerAuth()

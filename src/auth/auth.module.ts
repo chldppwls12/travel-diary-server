@@ -9,6 +9,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { CacheService } from '../cache/service/cache.service';
 import { LocalStrategy } from './strategy/local.strategy';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { MailService } from '../mail/service/mail.service';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
   controllers: [AuthController],
   providers: [
     AuthService,
+    MailService,
     UserRepository,
     PrismaService,
     CacheService,
