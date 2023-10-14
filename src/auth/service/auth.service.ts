@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -18,6 +19,7 @@ import { CurrentUserDto } from '../../common/dto/current-user.dto';
 import { SendCodeRequestDto } from '../dto/send-code-request.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { MailService } from '../../mail/service/mail.service';
+import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -76,7 +78,7 @@ export class AuthService {
     return tokens;
   }
 
-  async sendCode(requestDto: SendCodeRequestDto): Promise<any> {
+  async sendCode(requestDto: SendCodeRequestDto): Promise<void> {
     const { email } = requestDto;
 
     const randomCode = await this.mailService.sendCode(email);
@@ -85,6 +87,21 @@ export class AuthService {
       randomCode.toString(),
       60 * 3,
     );
+  }
+
+  async verifyCode(requestDto: VerifyCodeRequestDto): Promise<void> {
+    const { email, code } = requestDto;
+
+    if (await this.userRepository.findUserByEmail(email)) {
+      throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
+    }
+
+    if (
+      code !==
+      (await this.cacheService.get(`${RedisKey.EMAIL_CODE_KEY}:${email}`))
+    ) {
+      throw new BadRequestException(ErrMessage.INVALID_CODE);
+    }
   }
 
   async signTokens(payload: TokensRequestDto): Promise<TokensResponseDto> {

@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -11,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -22,6 +26,7 @@ import { TokensResponseDto } from '../dto/tokens-response.dto';
 import { JwtAuthGuard } from '../guard/jwt-auth.guard';
 import { CurrentUser } from '../decorator/current-user.decorator';
 import { SendCodeRequestDto } from '../dto/send-code-request.dto';
+import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -66,6 +71,16 @@ export class AuthController {
   })
   async sendCode(@Body() requestDto: SendCodeRequestDto): Promise<void> {
     await this.authService.sendCode(requestDto);
+  }
+
+  @Get('code')
+  @ApiOperation({ summary: '인증번호 확인 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: '인증번호 확인 성공',
+  })
+  async verifyCode(@Query() requestDto: VerifyCodeRequestDto): Promise<void> {
+    await this.authService.verifyCode(requestDto);
   }
 
   @ApiBearerAuth()
