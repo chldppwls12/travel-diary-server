@@ -85,6 +85,7 @@ model RecordFile {
   file     File     @relation(fields: [fileId], references: [id])
   fileId   String   @map("file_id")
   type     FileType
+  order    Int
 
   @@id([recordId, fileId])
 }
