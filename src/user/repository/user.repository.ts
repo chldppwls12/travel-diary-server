@@ -34,4 +34,15 @@ export class UserRepository {
       },
     });
   }
+
+  async delete(userId: string): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        status: Status.DELETED,
+      },
+    });
+  }
 }

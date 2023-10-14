@@ -1,16 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { SignUpRequestDto } from '../dto/signup-request.dto';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
@@ -78,6 +70,14 @@ export class AuthController {
   @ApiOkResponse({
     status: 200,
     description: '인증번호 확인 성공',
+  })
+  @ApiBadRequestResponse({
+    status: 400,
+    description: '유효하지 않은 인증번호',
+  })
+  @ApiConflictResponse({
+    status: 409,
+    description: '이미 존재하는 이메일',
   })
   async verifyCode(@Query() requestDto: VerifyCodeRequestDto): Promise<void> {
     await this.authService.verifyCode(requestDto);
