@@ -3,6 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
+  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
@@ -12,7 +13,7 @@ export class CreateRecordRequestDto {
   @ApiProperty({
     description: '기록 일자',
   })
-  @IsString()
+  @IsISO8601()
   recordDate: string;
 
   @ApiProperty({

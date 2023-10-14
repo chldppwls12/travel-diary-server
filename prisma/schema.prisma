@@ -63,6 +63,7 @@ model Record {
   userId     String
   city       City         @relation(fields: [cityId], references: [id])
   cityId     Int          @map("city_id")
+  place      String?
   files      RecordFile[]
 }
 

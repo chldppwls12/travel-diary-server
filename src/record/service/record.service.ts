@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
 import { RecordRepository } from '../repository/record.repository';
 import { FileRepository } from '../../file/repository/file.repository';
@@ -29,8 +33,13 @@ export class RecordService {
       throw new BadRequestException(ErrMessage.INVALID_FILE_ID);
     }
 
-    const { recordDate, feeling, weather, content, cityId } = requestDto;
+    const recordDate = new Date(requestDto.recordDate);
+    const { feeling, weather, content, cityId } = requestDto;
     const place = requestDto?.place ? requestDto.place : undefined;
+
+    if (!(await this.recordRepository.isExistCityId(cityId))) {
+      throw new BadRequestException(ErrMessage.INVALID_PARAM);
+    }
 
     return {
       id: await this.recordRepository.create({
