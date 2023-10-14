@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -78,5 +81,21 @@ export class RecordController {
       recordId,
       updateRecordRequestDto,
     );
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '일기 삭제 API' })
+  @ApiOkResponse({
+    status: 204,
+    description: '일기 삭제 성공',
+  })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:recordId')
+  async delete(
+    @Param('recordId') recordId: string,
+    @CurrentUser() user: TokenPayloadDto,
+  ) {
+    return await this.recordService.delete(user.userId, recordId);
   }
 }

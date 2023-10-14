@@ -43,6 +43,12 @@ export class RecordService {
     }
   }
 
+  async isExist(recordId: string): Promise<void> {
+    if (!(await this.recordRepository.isExist(recordId))) {
+      throw new BadRequestException(ErrMessage.INVALID_RECORD_ID);
+    }
+  }
+
   async isAuthor(userId: string, recordId: string): Promise<void> {
     if (!(await this.recordRepository.isUserRecord(userId, recordId))) {
       throw new UnauthorizedException(ErrMessage.UNAUTHORIZED);
@@ -115,6 +121,7 @@ export class RecordService {
     userId: string,
     recordId: string,
   ): Promise<FindRecordResponseDto> {
+    await this.isExist(recordId);
     await this.isAuthor(userId, recordId);
 
     const record = await this.recordRepository.findById(recordId);
@@ -174,6 +181,7 @@ export class RecordService {
     recordId: string,
     requestDto: UpdateRecordRequestDto,
   ): Promise<void> {
+    await this.isExist(recordId);
     await this.isAuthor(userId, recordId);
 
     if (requestDto?.medias) {
@@ -193,5 +201,12 @@ export class RecordService {
     }
 
     await this.recordRepository.update(recordId, requestDto);
+  }
+
+  async delete(userId: string, recordId: string): Promise<void> {
+    await this.isExist(recordId);
+    await this.isAuthor(userId, recordId);
+
+    await this.recordRepository.delete(recordId);
   }
 }

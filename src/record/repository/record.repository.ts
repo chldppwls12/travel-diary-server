@@ -9,6 +9,15 @@ import { UpdateRecordDto } from '../dto/update-record.dto';
 export class RecordRepository {
   constructor(private prisma: PrismaService) {}
 
+  async isExist(recordId: string): Promise<boolean> {
+    return !!(await this.prisma.record.findFirst({
+      where: {
+        id: recordId,
+        status: Status.NORMAL,
+      },
+    }));
+  }
+
   async create(requestDto: CreateRecordDto): Promise<string> {
     return (
       await this.prisma.record.create({
@@ -104,6 +113,17 @@ export class RecordRepository {
       },
       data: {
         ...requestDto,
+      },
+    });
+  }
+
+  async delete(recordId: string): Promise<void> {
+    await this.prisma.record.update({
+      where: {
+        id: recordId,
+      },
+      data: {
+        status: Status.DELETED,
       },
     });
   }
