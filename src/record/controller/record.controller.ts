@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
 import { RecordService } from '../service/record.service';
 import {
@@ -13,6 +21,7 @@ import { CurrentUser } from '../../auth/decorator/current-user.decorator';
 import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
 import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { FindRecordResponseDto } from '../dto/find-record-response.dto';
+import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
 
 @ApiTags('record')
 @Controller('record')
@@ -47,7 +56,27 @@ export class RecordController {
   async findById(
     @Param('recordId') recordId: string,
     @CurrentUser() user: TokenPayloadDto,
-  ): Promise<any> {
+  ): Promise<FindRecordResponseDto> {
     return await this.recordService.findById(user.userId, recordId);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '일기 수정 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: '일기 수정 성공',
+  })
+  @UseGuards(JwtAuthGuard)
+  @Patch('/:recordId')
+  async update(
+    @Param('recordId') recordId: string,
+    @CurrentUser() user: TokenPayloadDto,
+    @Body() updateRecordRequestDto: UpdateRecordRequestDto,
+  ): Promise<void> {
+    return await this.recordService.update(
+      user.userId,
+      recordId,
+      updateRecordRequestDto,
+    );
   }
 }

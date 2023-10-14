@@ -2,6 +2,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateRecordDto } from '../dto/create-record.dto';
 import { Status, Record, FileType, Prisma } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
+import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
+import { UpdateRecordDto } from '../dto/update-record.dto';
 
 @Injectable()
 export class RecordRepository {
@@ -82,6 +84,26 @@ export class RecordRepository {
       where: {
         id: recordId,
         status: Status.NORMAL,
+      },
+    });
+  }
+
+  async deleteRecordFile(recordId: string, fileId: string): Promise<void> {
+    await this.prisma.recordFile.deleteMany({
+      where: {
+        recordId,
+        fileId,
+      },
+    });
+  }
+
+  async update(recordId: string, requestDto: UpdateRecordDto): Promise<void> {
+    await this.prisma.record.update({
+      where: {
+        id: recordId,
+      },
+      data: {
+        ...requestDto,
       },
     });
   }

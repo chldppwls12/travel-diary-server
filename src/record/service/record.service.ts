@@ -12,6 +12,7 @@ import { FindRecordResponseDto } from '../dto/find-record-response.dto';
 import { FileType } from '@prisma/client';
 import { RecordMediaResponseDto } from '../dto/record-media-response.dto';
 import { RecordVoiceResponseDto } from '../dto/record-voice-response.dto';
+import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
 
 @Injectable()
 export class RecordService {
@@ -19,31 +20,52 @@ export class RecordService {
     private recordRepository: RecordRepository,
     private fileRepository: FileRepository,
   ) {}
-  async create(
-    userId: string,
-    requestDto: CreateRecordRequestDto,
-  ): Promise<IdResponseDto> {
-    // 파일 id 검증
-    for (const mediaId of requestDto?.medias) {
+
+  // medias(image, video file) 검증
+  async validateMediaFiles(mediaIds: string[]): Promise<void> {
+    for (const mediaId of mediaIds) {
       if (!(await this.fileRepository.isExist(mediaId))) {
         throw new BadRequestException(ErrMessage.INVALID_FILE_ID);
       }
     }
+  }
 
-    if (
-      requestDto?.voice &&
-      !(await this.fileRepository.isExist(requestDto.voice))
-    ) {
+  // voice file 검증
+  async validateVoiceFile(fileId: string): Promise<void> {
+    if (!(await this.fileRepository.isExist(fileId))) {
       throw new BadRequestException(ErrMessage.INVALID_FILE_ID);
+    }
+  }
+
+  async validateCityId(cityId: number): Promise<void> {
+    if (!(await this.recordRepository.isExistCityId(cityId))) {
+      throw new BadRequestException(ErrMessage.INVALID_PARAM);
+    }
+  }
+
+  async isAuthor(userId: string, recordId: string): Promise<void> {
+    if (!(await this.recordRepository.isUserRecord(userId, recordId))) {
+      throw new UnauthorizedException(ErrMessage.UNAUTHORIZED);
+    }
+  }
+
+  async create(
+    userId: string,
+    requestDto: CreateRecordRequestDto,
+  ): Promise<IdResponseDto> {
+    if (requestDto?.medias) {
+      await this.validateMediaFiles(requestDto.medias);
+    }
+
+    if (requestDto?.voice) {
+      await this.validateVoiceFile(requestDto.voice);
     }
 
     const recordDate = new Date(requestDto.recordDate);
     const { feeling, weather, content, cityId } = requestDto;
     const place = requestDto?.place ? requestDto.place : undefined;
 
-    if (!(await this.recordRepository.isExistCityId(cityId))) {
-      throw new BadRequestException(ErrMessage.INVALID_PARAM);
-    }
+    await this.validateCityId(cityId);
 
     const createdRecordId = await this.recordRepository.create({
       userId,
@@ -93,9 +115,8 @@ export class RecordService {
     userId: string,
     recordId: string,
   ): Promise<FindRecordResponseDto> {
-    if (!(await this.recordRepository.isUserRecord(userId, recordId))) {
-      throw new UnauthorizedException(ErrMessage.UNAUTHORIZED);
-    }
+    await this.isAuthor(userId, recordId);
+
     const record = await this.recordRepository.findById(recordId);
 
     let voice: RecordVoiceResponseDto = null;
@@ -146,5 +167,31 @@ export class RecordService {
       voice,
       place: record?.place,
     };
+  }
+
+  async update(
+    userId: string,
+    recordId: string,
+    requestDto: UpdateRecordRequestDto,
+  ): Promise<void> {
+    await this.isAuthor(userId, recordId);
+
+    if (requestDto?.medias) {
+      await this.validateMediaFiles(requestDto.medias);
+      for (const mediaId of requestDto.medias) {
+        await this.recordRepository.deleteRecordFile(recordId, mediaId);
+      }
+      delete requestDto.medias;
+    }
+    if (requestDto?.voice) {
+      await this.validateVoiceFile(requestDto.voice);
+      await this.recordRepository.deleteRecordFile(recordId, requestDto.voice);
+      delete requestDto.voice;
+    }
+    if (requestDto?.cityId) {
+      await this.validateCityId(requestDto.cityId);
+    }
+
+    await this.recordRepository.update(recordId, requestDto);
   }
 }
