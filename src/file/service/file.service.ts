@@ -5,7 +5,7 @@ import { FileRepository } from '../repository/file.repository';
 import { FileType } from '@prisma/client';
 import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';
-import { uuid } from 'uuidv4';
+import { v4 } from 'uuid';
 
 @Injectable()
 export class FileService {
@@ -29,28 +29,83 @@ export class FileService {
   ): Promise<{ data: UploadFileResponseDto[] }> {
     const data: UploadFileResponseDto[] = [];
 
-    const fileTypes = ['image', 'video', 'voice'];
+    if (requestDto?.image?.length > 0) {
+      const id = v4();
+      const uploadParams = {
+        Bucket: this.configService.get<string>('S3_BUCKET'),
+        Key: id,
+        Body: requestDto.image[0].buffer,
+      };
 
-    for (const fileType of fileTypes) {
-      if (requestDto?.[fileType]?.length > 0) {
-        const id = uuid();
-        const uploadParams = {
-          Bucket: this.configService.get<string>('S3_BUCKET'),
-          Key: id,
-          Body: requestDto[fileType][0].buffer,
-        };
-        await this.fileRepository.upload(
-          requestDto[fileType][0],
-          FileType[fileType.toUpperCase()],
-        );
+      const uploadedLink = (await this.s3.upload(uploadParams).promise())
+        .Location;
+      // TODO: shortLink
+      await this.fileRepository.upload(
+        requestDto.image[0].originalname,
+        uploadedLink,
+        uploadedLink,
+        FileType.IMAGE,
+      );
 
-        data.push({
-          id,
-          originName: requestDto[fileType][0].originalname,
-          type: FileType[fileType.toUpperCase()],
-          uploadedLink: (await this.s3.upload(uploadParams).promise()).Location,
-        });
-      }
+      data.push({
+        id,
+        originName: requestDto.image[0].originalname,
+        type: FileType.IMAGE,
+        uploadedLink,
+      });
+    }
+    if (requestDto?.video?.length > 0) {
+      const id = v4();
+      const uploadParams = {
+        Bucket: this.configService.get<string>('S3_BUCKET'),
+        Key: id,
+        Body: requestDto.video[0].buffer,
+      };
+
+      const uploadedLink = (await this.s3.upload(uploadParams).promise())
+        .Location;
+      // TODO: shortLink
+      // TODO: add thumbnail
+      await this.fileRepository.upload(
+        requestDto.video[0].originalname,
+        uploadedLink,
+        uploadedLink,
+        FileType.VIDEO,
+        'https://yj-traily.s3.amazonaws.com/2ce64192-0383-4685-ad88-31c5950eb4db',
+        'https://yj-traily.s3.amazonaws.com/2ce64192-0383-4685-ad88-31c5950eb4db',
+      );
+
+      data.push({
+        id,
+        originName: requestDto.video[0].originalname,
+        type: FileType.VIDEO,
+        uploadedLink,
+      });
+    }
+    if (requestDto?.voice?.length > 0) {
+      const id = v4();
+      const uploadParams = {
+        Bucket: this.configService.get<string>('S3_BUCKET'),
+        Key: id,
+        Body: requestDto.voice[0].buffer,
+      };
+
+      const uploadedLink = (await this.s3.upload(uploadParams).promise())
+        .Location;
+      // TODO: shortLink
+      await this.fileRepository.upload(
+        requestDto.voice[0].originalname,
+        uploadedLink,
+        uploadedLink,
+        FileType.VOICE,
+      );
+
+      data.push({
+        id,
+        originName: requestDto.voice[0].originalname,
+        type: FileType.VOICE,
+        uploadedLink,
+      });
     }
 
     return {

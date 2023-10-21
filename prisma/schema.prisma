@@ -70,15 +70,17 @@ model Record {
 }
 
 model File {
-  id           String       @id @default(uuid())
-  type         FileType
-  originalName String       @map("original_name") @db.VarChar(100)
-  uploadedLink String       @map("uploaded_link") @db.VarChar(1000)
-  shortLink    String       @map("short_link") @db.VarChar(100)
-  createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
-  status       Status       @default(NORMAL)
-  records      RecordFile[]
+  id                 String       @id @default(uuid())
+  type               FileType
+  originalName       String       @map("original_name") @db.VarChar(100)
+  uploadedLink       String       @map("uploaded_link") @db.VarChar(1000)
+  shortLink          String       @map("short_link") @db.VarChar(100)
+  thumbnailLink      String?      @map("thumbnail_link") @db.VarChar(1000)
+  thumbnailShortLink String?      @map("thumbnail_short_link") @db.VarChar(100)
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  status             Status       @default(NORMAL)
+  records            RecordFile[]
 }
 
 model RecordFile {

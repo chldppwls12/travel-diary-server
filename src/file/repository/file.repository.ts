@@ -38,14 +38,23 @@ export class FileRepository {
     });
   }
 
-  async upload(file: Express.Multer.File, type: FileType): Promise<string> {
+  async upload(
+    originalName: string,
+    uploadedLink: string,
+    shortLink: string,
+    type: FileType,
+    thumbnailLink?: string,
+    thumbnailShortLink?: string,
+  ): Promise<string> {
     return (
       await this.prisma.file.create({
         data: {
-          originalName: file.originalname,
+          originalName,
           type,
-          uploadedLink: 'link',
-          shortLink: 'link',
+          uploadedLink,
+          shortLink,
+          thumbnailLink,
+          thumbnailShortLink,
         },
       })
     ).id;
