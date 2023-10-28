@@ -225,4 +225,18 @@ export class RecordRepository {
       take: offset,
     });
   }
+
+  async isExistRecordDate(
+    userId: string,
+    recordDate: string,
+  ): Promise<boolean> {
+    return !!(await this.prisma.record.findFirst({
+      where: {
+        userId,
+        recordDate: {
+          equals: new Date(recordDate),
+        },
+      },
+    }));
+  }
 }

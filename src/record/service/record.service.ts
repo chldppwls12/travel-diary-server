@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -368,5 +369,11 @@ export class RecordService {
     return {
       data,
     };
+  }
+
+  async isExistRecordDate(userId: string, recordDate: string): Promise<void> {
+    if (await this.recordRepository.isExistRecordDate(userId, recordDate)) {
+      throw new ConflictException(ErrMessage.ALREADY_EXISTS_DATE);
+    }
   }
 }
