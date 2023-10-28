@@ -103,7 +103,11 @@ export class RecordController {
     if (queryDto?.page) {
       queryDto.page = +queryDto.page;
     }
-    return await this.recordService.findAllWithMap(user.userId, queryDto);
+    try {
+      return await this.recordService.findAllWithMap(user.userId, queryDto);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   @ApiBearerAuth()

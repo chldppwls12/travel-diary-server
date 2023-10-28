@@ -261,12 +261,30 @@ export class RecordRepository {
     )?.groupId;
   }
 
-  async createRecordGroup(recordId: string, groupId: number): Promise<void> {
+  async createRecordGroup(
+    userId: string,
+    recordId: string,
+    groupId: number,
+  ): Promise<void> {
     await this.prisma.recordGroup.create({
       data: {
+        userId,
         recordId,
         groupId,
       },
     });
+  }
+
+  async findFirstRecordByGroup(
+    userId: string,
+    groupIds: number[],
+  ): Promise<any[]> {
+    const formattedGroupIds = groupIds.join(', ');
+
+    return this.prisma.$queryRaw`
+        SELECT group_id AS groupId, record_id AS recordId, MAX(created_at) as createdAt FROM RecordGroup
+        WHERE user_id = ${userId} AND group_id IN (${formattedGroupIds})
+        GROUP BY group_id
+    `;
   }
 }

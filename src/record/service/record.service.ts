@@ -18,6 +18,7 @@ import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
 import { FindMapQueryDto } from '../dto/find-map-query.dto';
 import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
 import { LastImageResponseDto } from '../dto/map/last-image-response.dto';
+import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -137,7 +138,11 @@ export class RecordService {
     const groupId = await this.recordRepository.findGroupByCityId(
       requestDto.cityId,
     );
-    await this.recordRepository.createRecordGroup(createdRecordId, groupId);
+    await this.recordRepository.createRecordGroup(
+      userId,
+      createdRecordId,
+      groupId,
+    );
 
     return {
       id: createdRecordId,
@@ -254,10 +259,24 @@ export class RecordService {
         await this.recordRepository.findGroupsByProvinceId(queryDto.provinceId)
       ).map((group) => group.groupId);
 
-      for (const groupId of groupIds) {
-        // TODO: 각각의 group마다 실행하기
-        await this.findMapByProvince(userId, groupId);
+      // RecordGroup에서 가장 groupId에 속하고 가장 빠른 것 찾기
+      const recordWithGroup = (
+        await this.recordRepository.findFirstRecordByGroup(userId, groupIds)
+      ).map((record) => [record.recordId, record.groupId]);
+
+      const data: GroupMapResponseDto[] = [];
+      for (const [recordId, groupId] of recordWithGroup) {
+        const record = await this.recordRepository.findById(recordId);
+
+        data.push({
+          id: record.id,
+          image: await this.findRecordThumbnail(record.id),
+          groupId: groupId,
+        });
       }
+      return {
+        data,
+      };
     }
 
     // groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
@@ -301,13 +320,6 @@ export class RecordService {
     return {
       data,
     };
-  }
-
-  async findMapByProvince(userId: string, provinceId: number) {
-    const records = await this.recordRepository.findMapByProvince(
-      userId,
-      provinceId,
-    );
   }
 
   async findMapByGroup(
