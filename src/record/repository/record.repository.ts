@@ -142,6 +142,14 @@ export class RecordRepository {
     });
   }
 
+  async deleteRecordGroup(recordId: string): Promise<void> {
+    await this.prisma.recordGroup.deleteMany({
+      where: {
+        recordId,
+      },
+    });
+  }
+
   async findFullMap(userId: string): Promise<Record[]> {
     // record에서 provinceId 별로 createdAt이 가장 최근 것인 일기 가져오기
     return this.prisma.$queryRaw`
@@ -238,5 +246,27 @@ export class RecordRepository {
         },
       },
     }));
+  }
+
+  async findGroupByCityId(cityId: number): Promise<number | null> {
+    return (
+      await this.prisma.city.findFirst({
+        select: {
+          groupId: true,
+        },
+        where: {
+          id: cityId,
+        },
+      })
+    )?.groupId;
+  }
+
+  async createRecordGroup(recordId: string, groupId: number): Promise<void> {
+    await this.prisma.recordGroup.create({
+      data: {
+        recordId,
+        groupId,
+      },
+    });
   }
 }

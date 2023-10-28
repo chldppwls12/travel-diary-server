@@ -125,10 +125,19 @@ export class RecordService {
     }
 
     // voice -> 음성 추가
-    await this.recordRepository.createRecordFileWithVoice(
-      createdRecordId,
-      requestDto.voice,
+    if (requestDto?.voice) {
+      await this.recordRepository.createRecordFileWithVoice(
+        createdRecordId,
+        requestDto.voice,
+      );
+    }
+
+    // city 입력받았는데 RecordGroup 추가해야함
+    // recordId -> createdRecordId , groupId -> cityId로 조회
+    const groupId = await this.recordRepository.findGroupByCityId(
+      requestDto.cityId,
     );
+    await this.recordRepository.createRecordGroup(createdRecordId, groupId);
 
     return {
       id: createdRecordId,
@@ -225,6 +234,7 @@ export class RecordService {
   async delete(userId: string, recordId: string): Promise<void> {
     await this.isExist(recordId);
     await this.isAuthor(userId, recordId);
+    await this.recordRepository.deleteRecordGroup(recordId);
 
     await this.recordRepository.delete(recordId);
   }

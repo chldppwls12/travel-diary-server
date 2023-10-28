@@ -112,10 +112,11 @@ model Group {
 }
 
 model RecordGroup {
-  record   Record @relation(fields: [recordId], references: [id])
-  recordId String @map("record_id")
-  group    Group  @relation(fields: [groupId], references: [id])
-  groupId  Int    @map("group_id")
+  record    Record   @relation(fields: [recordId], references: [id])
+  recordId  String   @map("record_id")
+  group     Group    @relation(fields: [groupId], references: [id])
+  groupId   Int      @map("group_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@id([recordId, groupId])
 }
