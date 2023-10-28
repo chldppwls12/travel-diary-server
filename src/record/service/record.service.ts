@@ -262,7 +262,7 @@ export class RecordService {
       );
     }
 
-    // TODO: cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
+    // cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
     if (queryDto.cityId) {
       if (!queryDto?.page || !queryDto?.offset) {
         throw new BadRequestException(ErrMessage.INVALID_PARAM);
