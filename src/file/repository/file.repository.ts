@@ -37,4 +37,26 @@ export class FileRepository {
       },
     });
   }
+
+  async upload(
+    originalName: string,
+    uploadedLink: string,
+    shortLink: string,
+    type: FileType,
+    thumbnailLink?: string,
+    thumbnailShortLink?: string,
+  ): Promise<string> {
+    return (
+      await this.prisma.file.create({
+        data: {
+          originalName,
+          type,
+          uploadedLink,
+          shortLink,
+          thumbnailLink,
+          thumbnailShortLink,
+        },
+      })
+    ).id;
+  }
 }
