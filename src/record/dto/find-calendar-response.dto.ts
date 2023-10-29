@@ -11,4 +11,9 @@ export class FindCalendarResponseDto {
     description: '이미지',
   })
   image: LastImageResponseDto;
+
+  @ApiProperty({
+    description: '날짜',
+  })
+  recordDate: Date;
 }

@@ -284,13 +284,11 @@ export class RecordService {
     // groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
     if (queryDto.groupId) {
       // groupId에 해당하는 cityId 가져오기
-      const cities = await this.recordRepository.findCitiesByGroupId(
-        queryDto.groupId,
-      );
-      return await this.findMapByGroup(
-        userId,
-        cities.map((city) => city.id),
-      );
+      const cityIds = (
+        await this.recordRepository.findCitiesByGroupId(queryDto.groupId)
+      ).map((city) => city.id);
+
+      return await this.findMapByGroup(userId, cityIds);
     }
 
     // cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
@@ -416,6 +414,7 @@ export class RecordService {
       data.push({
         id: record.id,
         image: await this.findRecordThumbnail(record.id),
+        recordDate: record.recordDate,
       });
     }
     return {
