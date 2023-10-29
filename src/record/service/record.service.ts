@@ -19,6 +19,8 @@ import { FindMapQueryDto } from '../dto/find-map-query.dto';
 import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
 import { LastImageResponseDto } from '../dto/map/last-image-response.dto';
 import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
+import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -397,5 +399,27 @@ export class RecordService {
     if (await this.recordRepository.isExistRecordDate(userId, recordDate)) {
       throw new ConflictException(ErrMessage.ALREADY_EXISTS_DATE);
     }
+  }
+
+  async findCalendar(
+    userId: string,
+    queryDto: FindCalanderQueryDto,
+  ): Promise<{ data: FindCalendarResponseDto[] }> {
+    const data: FindCalendarResponseDto[] = [];
+    const records = await this.recordRepository.findByRecordDate(
+      userId,
+      queryDto.year,
+      queryDto.month,
+    );
+
+    for (const record of records) {
+      data.push({
+        id: record.id,
+        image: await this.findRecordThumbnail(record.id),
+      });
+    }
+    return {
+      data,
+    };
   }
 }

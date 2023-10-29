@@ -31,6 +31,8 @@ import { FindRecordResponseDto } from '../dto/find-record-response.dto';
 import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
 import { FindMapQueryDto } from '../dto/find-map-query.dto';
 import { IsExistDateQueryDto } from '../dto/is-exist-date-query.dto';
+import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
 
 @ApiTags('records')
 @Controller('records')
@@ -103,11 +105,21 @@ export class RecordController {
     if (queryDto?.page) {
       queryDto.page = +queryDto.page;
     }
-    try {
-      return await this.recordService.findAllWithMap(user.userId, queryDto);
-    } catch (err) {
-      console.log(err);
-    }
+    return await this.recordService.findAllWithMap(user.userId, queryDto);
+  }
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '일기 캘린더 형식 조회 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: '일기 캘린더 형식 조회 성공',
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('/calendar')
+  async findCalendar(
+    @Query() queryDto: FindCalanderQueryDto,
+    @CurrentUser() user: TokenPayloadDto,
+  ): Promise<{ data: FindCalendarResponseDto[] }> {
+    return this.recordService.findCalendar(user.userId, queryDto);
   }
 
   @ApiBearerAuth()

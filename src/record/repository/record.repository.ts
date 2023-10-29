@@ -287,4 +287,24 @@ export class RecordRepository {
         GROUP BY group_id
     `;
   }
+
+  async findByRecordDate(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<Record[]> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    return this.prisma.record.findMany({
+      where: {
+        userId,
+        status: Status.NORMAL,
+        recordDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+  }
 }
