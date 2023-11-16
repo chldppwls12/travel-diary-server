@@ -142,6 +142,14 @@ export class RecordRepository {
     });
   }
 
+  async deleteRecordGroup(recordId: string): Promise<void> {
+    await this.prisma.recordGroup.deleteMany({
+      where: {
+        recordId,
+      },
+    });
+  }
+
   async findFullMap(userId: string): Promise<Record[]> {
     // record에서 provinceId 별로 createdAt이 가장 최근 것인 일기 가져오기
     return this.prisma.$queryRaw`
@@ -223,6 +231,80 @@ export class RecordRepository {
       },
       skip: (page - 1) * offset,
       take: offset,
+    });
+  }
+
+  async isExistRecordDate(
+    userId: string,
+    recordDate: string,
+  ): Promise<boolean> {
+    return !!(await this.prisma.record.findFirst({
+      where: {
+        userId,
+        recordDate: {
+          equals: new Date(recordDate),
+        },
+      },
+    }));
+  }
+
+  async findGroupByCityId(cityId: number): Promise<number | null> {
+    return (
+      await this.prisma.city.findFirst({
+        select: {
+          groupId: true,
+        },
+        where: {
+          id: cityId,
+        },
+      })
+    )?.groupId;
+  }
+
+  async createRecordGroup(
+    userId: string,
+    recordId: string,
+    groupId: number,
+  ): Promise<void> {
+    await this.prisma.recordGroup.create({
+      data: {
+        userId,
+        recordId,
+        groupId,
+      },
+    });
+  }
+
+  async findFirstRecordByGroup(
+    userId: string,
+    groupIds: number[],
+  ): Promise<any[]> {
+    const formattedGroupIds = groupIds.join(', ');
+
+    return this.prisma.$queryRaw`
+        SELECT group_id AS groupId, record_id AS recordId, MAX(created_at) as createdAt FROM RecordGroup
+        WHERE user_id = ${userId} AND group_id IN (${formattedGroupIds})
+        GROUP BY group_id
+    `;
+  }
+
+  async findByRecordDate(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<Record[]> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+
+    return this.prisma.record.findMany({
+      where: {
+        userId,
+        status: Status.NORMAL,
+        recordDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
     });
   }
 }

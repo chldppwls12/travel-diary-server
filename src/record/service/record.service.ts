@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,6 +18,9 @@ import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
 import { FindMapQueryDto } from '../dto/find-map-query.dto';
 import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
 import { LastImageResponseDto } from '../dto/map/last-image-response.dto';
+import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
+import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -124,9 +128,22 @@ export class RecordService {
     }
 
     // voice -> 음성 추가
-    await this.recordRepository.createRecordFileWithVoice(
+    if (requestDto?.voice) {
+      await this.recordRepository.createRecordFileWithVoice(
+        createdRecordId,
+        requestDto.voice,
+      );
+    }
+
+    // city 입력받았는데 RecordGroup 추가해야함
+    // recordId -> createdRecordId , groupId -> cityId로 조회
+    const groupId = await this.recordRepository.findGroupByCityId(
+      requestDto.cityId,
+    );
+    await this.recordRepository.createRecordGroup(
+      userId,
       createdRecordId,
-      requestDto.voice,
+      groupId,
     );
 
     return {
@@ -224,6 +241,7 @@ export class RecordService {
   async delete(userId: string, recordId: string): Promise<void> {
     await this.isExist(recordId);
     await this.isAuthor(userId, recordId);
+    await this.recordRepository.deleteRecordGroup(recordId);
 
     await this.recordRepository.delete(recordId);
   }
@@ -243,25 +261,37 @@ export class RecordService {
         await this.recordRepository.findGroupsByProvinceId(queryDto.provinceId)
       ).map((group) => group.groupId);
 
-      for (const groupId of groupIds) {
-        // TODO: 각각의 group마다 실행하기
-        await this.findMapByProvince(userId, groupId);
+      // RecordGroup에서 가장 groupId에 속하고 가장 빠른 것 찾기
+      const recordWithGroup = (
+        await this.recordRepository.findFirstRecordByGroup(userId, groupIds)
+      ).map((record) => [record.recordId, record.groupId]);
+
+      const data: GroupMapResponseDto[] = [];
+      for (const [recordId, groupId] of recordWithGroup) {
+        const record = await this.recordRepository.findById(recordId);
+
+        data.push({
+          id: record.id,
+          image: await this.findRecordThumbnail(record.id),
+          groupId: groupId,
+        });
       }
+      return {
+        data,
+      };
     }
 
     // groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
     if (queryDto.groupId) {
       // groupId에 해당하는 cityId 가져오기
-      const cities = await this.recordRepository.findCitiesByGroupId(
-        queryDto.groupId,
-      );
-      return await this.findMapByGroup(
-        userId,
-        cities.map((city) => city.id),
-      );
+      const cityIds = (
+        await this.recordRepository.findCitiesByGroupId(queryDto.groupId)
+      ).map((city) => city.id);
+
+      return await this.findMapByGroup(userId, cityIds);
     }
 
-    // TODO: cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
+    // cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
     if (queryDto.cityId) {
       if (!queryDto?.page || !queryDto?.offset) {
         throw new BadRequestException(ErrMessage.INVALID_PARAM);
@@ -290,13 +320,6 @@ export class RecordService {
     return {
       data,
     };
-  }
-
-  async findMapByProvince(userId: string, provinceId: number) {
-    const records = await this.recordRepository.findMapByProvince(
-      userId,
-      provinceId,
-    );
   }
 
   async findMapByGroup(
@@ -365,6 +388,35 @@ export class RecordService {
       });
     }
 
+    return {
+      data,
+    };
+  }
+
+  async isExistRecordDate(userId: string, recordDate: string): Promise<void> {
+    if (await this.recordRepository.isExistRecordDate(userId, recordDate)) {
+      throw new ConflictException(ErrMessage.ALREADY_EXISTS_DATE);
+    }
+  }
+
+  async findCalendar(
+    userId: string,
+    queryDto: FindCalanderQueryDto,
+  ): Promise<{ data: FindCalendarResponseDto[] }> {
+    const data: FindCalendarResponseDto[] = [];
+    const records = await this.recordRepository.findByRecordDate(
+      userId,
+      queryDto.year,
+      queryDto.month,
+    );
+
+    for (const record of records) {
+      data.push({
+        id: record.id,
+        image: await this.findRecordThumbnail(record.id),
+        recordDate: record.recordDate,
+      });
+    }
     return {
       data,
     };

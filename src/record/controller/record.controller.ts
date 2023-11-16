@@ -16,6 +16,7 @@ import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
 import { RecordService } from '../service/record.service';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiOperation,
@@ -28,9 +29,10 @@ import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
 import { IdResponseDto } from '../../common/dto/id-response.dto';
 import { FindRecordResponseDto } from '../dto/find-record-response.dto';
 import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
-import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
 import { FindMapQueryDto } from '../dto/find-map-query.dto';
-import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
+import { IsExistDateQueryDto } from '../dto/is-exist-date-query.dto';
+import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
 
 @ApiTags('records')
 @Controller('records')
@@ -51,6 +53,28 @@ export class RecordController {
     @Body() requestDto: CreateRecordRequestDto,
   ): Promise<IdResponseDto> {
     return await this.recordService.create(user.userId, requestDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'recordDate 유효 여부 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: 'recordDate 유효 여부 성공',
+  })
+  @ApiConflictResponse({
+    status: 409,
+    description: '이미 일기 존재',
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('/exists')
+  async isExistRecordDate(
+    @Query() queryDto: IsExistDateQueryDto,
+    @CurrentUser() user: TokenPayloadDto,
+  ): Promise<void> {
+    return await this.recordService.isExistRecordDate(
+      user.userId,
+      queryDto.recordDate,
+    );
   }
 
   @ApiBearerAuth()
@@ -82,6 +106,20 @@ export class RecordController {
       queryDto.page = +queryDto.page;
     }
     return await this.recordService.findAllWithMap(user.userId, queryDto);
+  }
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '일기 캘린더 형식 조회 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: '일기 캘린더 형식 조회 성공',
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('/calendar')
+  async findCalendar(
+    @Query() queryDto: FindCalanderQueryDto,
+    @CurrentUser() user: TokenPayloadDto,
+  ): Promise<{ data: FindCalendarResponseDto[] }> {
+    return this.recordService.findCalendar(user.userId, queryDto);
   }
 
   @ApiBearerAuth()

@@ -1,11 +1,10 @@
 import {
   Controller,
   Post,
-  UploadedFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UploadFileResponseDto } from '../dto/upload-file-response.dto';
 import { UploadFileRequestDto } from '../dto/upload-file-request.dto';
 import { FileService } from '../service/file.service';
@@ -16,6 +15,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 export class FileController {
   constructor(private fileService: FileService) {}
   @Post()
+  @ApiOperation({ summary: '파일 업로드 API' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
