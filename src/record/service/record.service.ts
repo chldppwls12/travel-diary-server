@@ -249,13 +249,15 @@ export class RecordService {
   async findAllWithMap(
     userId: string,
     queryDto: FindMapQueryDto,
-  ): Promise<any> {
+  ): Promise<{
+    data: FullMapResponseDto[] | GroupMapResponseDto[] | CityMapResponseDto[];
+  }> {
     // 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
     if (!queryDto?.provinceId && !queryDto?.groupId && !queryDto?.cityId) {
       return await this.findFullMap(userId);
     }
 
-    // TODO: provinceId 넣었을 때 특정 위치 조회 -> 각각의 group마다 최근 작성 글 1개 씩
+    // provinceId 넣었을 때 특정 위치 조회 -> 각각의 group마다 최근 작성 글 1개 씩
     if (queryDto.provinceId) {
       const groupIds = (
         await this.recordRepository.findGroupsByProvinceId(queryDto.provinceId)
@@ -276,6 +278,7 @@ export class RecordService {
           groupId: groupId,
         });
       }
+
       return {
         data,
       };
@@ -336,7 +339,11 @@ export class RecordService {
       data.push({
         id: record.id,
         image: await this.findRecordThumbnail(record.id),
-        cityId: record.cityId,
+        provinceId: record.provinceId,
+        city: {
+          id: record.cityId,
+          name: record.city.name,
+        },
       });
     }
 
@@ -384,7 +391,11 @@ export class RecordService {
       data.push({
         id: record.id,
         image: await this.findRecordThumbnail(record.id),
-        cityId: record.cityId,
+        provinceId: record.provinceId,
+        city: {
+          id: record.cityId,
+          name: record.city.name,
+        },
       });
     }
 

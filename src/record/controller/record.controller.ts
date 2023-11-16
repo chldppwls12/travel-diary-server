@@ -6,7 +6,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -18,10 +17,12 @@ import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   getSchemaPath,
+  refs,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
 import { CurrentUser } from '../../auth/decorator/current-user.decorator';
@@ -33,6 +34,9 @@ import { FindMapQueryDto } from '../dto/find-map-query.dto';
 import { IsExistDateQueryDto } from '../dto/is-exist-date-query.dto';
 import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
 import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
+import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
+import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
+import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
 
 @ApiTags('records')
 @Controller('records')
@@ -77,18 +81,39 @@ export class RecordController {
     );
   }
 
+  @ApiExtraModels(FullMapResponseDto, GroupMapResponseDto, CityMapResponseDto)
   @ApiBearerAuth()
   @ApiOperation({ summary: '일기 지도 형식 조회 API' })
   @ApiOkResponse({
     status: 200,
     description: '일기 지도 형식 조회 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          oneOf: [
+            {
+              $ref: getSchemaPath(FullMapResponseDto),
+            },
+            {
+              $ref: getSchemaPath(GroupMapResponseDto),
+            },
+            {
+              $ref: getSchemaPath(CityMapResponseDto),
+            },
+          ],
+        },
+      },
+    },
   })
   @UseGuards(JwtAuthGuard)
   @Get('/map')
   async findAllWithMap(
     @Query() queryDto: FindMapQueryDto,
     @CurrentUser() user: TokenPayloadDto,
-  ): Promise<any> {
+  ): Promise<{
+    data: FullMapResponseDto[] | GroupMapResponseDto[] | CityMapResponseDto[];
+  }> {
     // TODO: 변경 필요
     if (queryDto?.groupId) {
       queryDto.groupId = +queryDto.groupId;
