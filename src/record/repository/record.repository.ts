@@ -1,8 +1,8 @@
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { CreateRecordDto } from '../dto/create-record.dto';
-import { Status, Record, FileType, Prisma, RecordFile } from '@prisma/client';
+import { Status, Record, FileType, Prisma } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
-import { UpdateRecordDto } from '../dto/update-record.dto';
+import { UpdateRecordDto } from '@/record/dto/update-record.dto';
 
 @Injectable()
 export class RecordRepository {

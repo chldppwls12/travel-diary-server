@@ -1,4 +1,4 @@
-import { MapResponseDto } from './map-response.dto';
+import { MapResponseDto } from '@/record/dto/map/map-response.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 class CityResponseDto {

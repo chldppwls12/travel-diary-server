@@ -11,8 +11,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
-import { RecordService } from '../service/record.service';
+import { CreateRecordRequestDto } from '@/record/dto/create-record-request.dto';
+import { RecordService } from '@/record/service/record.service';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
@@ -22,21 +22,20 @@ import {
   ApiOperation,
   ApiTags,
   getSchemaPath,
-  refs,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorator/current-user.decorator';
-import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
-import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { FindRecordResponseDto } from '../dto/find-record-response.dto';
-import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
-import { FindMapQueryDto } from '../dto/find-map-query.dto';
-import { IsExistDateQueryDto } from '../dto/is-exist-date-query.dto';
-import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
-import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
-import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
-import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
-import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
+import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
+import { CurrentUser } from '@/auth/decorator/current-user.decorator';
+import { TokenPayloadDto } from '@/auth/dto/token-payload.dto';
+import { IdResponseDto } from '@/common/dto/id-response.dto';
+import { FindRecordResponseDto } from '@/record/dto/find-record-response.dto';
+import { UpdateRecordRequestDto } from '@/record/dto/update-record-request.dto';
+import { FindMapQueryDto } from '@/record/dto/find-map-query.dto';
+import { IsExistDateQueryDto } from '@/record/dto/is-exist-date-query.dto';
+import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
+import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
+import { GroupMapResponseDto } from '@/record/dto/map/group-map-response.dto';
+import { CityMapResponseDto } from '@/record/dto/map/city-map-response.dto';
 
 @ApiTags('records')
 @Controller('records')

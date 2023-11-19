@@ -4,21 +4,20 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { SignUpRequestDto } from '../dto/signup-request.dto';
-import { UserRepository } from '../../user/repository/user.repository';
+import { SignUpRequestDto } from '@/auth/dto/signup-request.dto';
+import { UserRepository } from '@/user/repository/user.repository';
 import * as bcrypt from 'bcrypt';
-import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { ErrMessage } from '../../common/enum/err-message';
-import { LoginRequestDto } from '../dto/login-request.dto';
-import { TokensRequestDto } from '../dto/tokens-request.dto';
-import { TokensResponseDto } from '../dto/tokens-response.dto';
+import { IdResponseDto } from '@/common/dto/id-response.dto';
+import { ErrMessage } from '@/common/enum/err-message';
+import { LoginRequestDto } from '@/auth/dto/login-request.dto';
+import { TokensRequestDto } from '@/auth/dto/tokens-request.dto';
+import { TokensResponseDto } from '@/auth/dto/tokens-response.dto';
 import { JwtService } from '@nestjs/jwt';
-import { CacheService } from '../../cache/service/cache.service';
-import { RedisKey } from '../../common/enum/redis-key';
-import { CurrentUserDto } from '../../common/dto/current-user.dto';
+import { CacheService } from '@/cache/service/cache.service';
+import { RedisKey } from '@/common/enum/redis-key';
+import { CurrentUserDto } from '@/common/dto/current-user.dto';
 import { SendCodeRequestDto } from '../dto/send-code-request.dto';
-import { MailerService } from '@nestjs-modules/mailer';
-import { MailService } from '../../mail/service/mail.service';
+import { MailService } from '@/mail/service/mail.service';
 import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
 
 @Injectable()

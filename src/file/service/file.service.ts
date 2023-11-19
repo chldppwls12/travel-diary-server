@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { UploadFileResponseDto } from '../dto/upload-file-response.dto';
-import { UploadFileRequestDto } from '../dto/upload-file-request.dto';
-import { FileRepository } from '../repository/file.repository';
+import { UploadFileResponseDto } from '@/file/dto/upload-file-response.dto';
+import { UploadFileRequestDto } from '@/file/dto/upload-file-request.dto';
+import { FileRepository } from '@/file/repository/file.repository';
 import { FileType } from '@prisma/client';
 import * as AWS from 'aws-sdk';
 import { ConfigService } from '@nestjs/config';

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { LastImageResponseDto } from './map/last-image-response.dto';
+import { LastImageResponseDto } from '@/record/dto/map/last-image-response.dto';
 
 export class FindCalendarResponseDto {
   @ApiProperty({

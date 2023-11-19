@@ -4,23 +4,23 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
-import { RecordRepository } from '../repository/record.repository';
-import { FileRepository } from '../../file/repository/file.repository';
-import { ErrMessage } from '../../common/enum/err-message';
-import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { FindRecordResponseDto } from '../dto/find-record-response.dto';
-import { City, FileType, Record } from '@prisma/client';
-import { RecordMediaResponseDto } from '../dto/record-media-response.dto';
-import { RecordVoiceResponseDto } from '../dto/record-voice-response.dto';
-import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
-import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
-import { FindMapQueryDto } from '../dto/find-map-query.dto';
-import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
-import { LastImageResponseDto } from '../dto/map/last-image-response.dto';
-import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
-import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
-import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
+import { CreateRecordRequestDto } from '@/record/dto/create-record-request.dto';
+import { RecordRepository } from '@/record/repository/record.repository';
+import { FileRepository } from '@/file/repository/file.repository';
+import { ErrMessage } from '@/common/enum/err-message';
+import { IdResponseDto } from '@/common/dto/id-response.dto';
+import { FindRecordResponseDto } from '@/record/dto/find-record-response.dto';
+import { FileType } from '@prisma/client';
+import { RecordMediaResponseDto } from '@/record/dto/record-media-response.dto';
+import { RecordVoiceResponseDto } from '@/record/dto/record-voice-response.dto';
+import { UpdateRecordRequestDto } from '@/record/dto/update-record-request.dto';
+import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
+import { FindMapQueryDto } from '@/record/dto/find-map-query.dto';
+import { CityMapResponseDto } from '@/record/dto/map/city-map-response.dto';
+import { LastImageResponseDto } from '@/record/dto/map/last-image-response.dto';
+import { GroupMapResponseDto } from '@/record/dto/map/group-map-response.dto';
+import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
 
 @Injectable()
 export class RecordService {

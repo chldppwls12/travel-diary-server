@@ -5,9 +5,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UploadFileResponseDto } from '../dto/upload-file-response.dto';
-import { UploadFileRequestDto } from '../dto/upload-file-request.dto';
-import { FileService } from '../service/file.service';
+import { UploadFileResponseDto } from '@/file/dto/upload-file-response.dto';
+import { UploadFileRequestDto } from '@/file/dto/upload-file-request.dto';
+import { FileService } from '@/file/service/file.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('files')
