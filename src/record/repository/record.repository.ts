@@ -202,7 +202,12 @@ export class RecordRepository {
     });
   }
 
-  async findAllByCityIds(userId: string, cityIds: number[]): Promise<any[]> {
+  async findAllByCityIds(
+    userId: string,
+    cityIds: number[],
+    page: number,
+    offset: number,
+  ): Promise<any[]> {
     return this.prisma.record.findMany({
       where: {
         userId,
@@ -214,6 +219,8 @@ export class RecordRepository {
       include: {
         city: true,
       },
+      skip: (page - 1) * offset,
+      take: offset,
     });
   }
 

@@ -286,12 +286,21 @@ export class RecordService {
 
     // groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
     if (queryDto.groupId) {
+      if (!queryDto?.page || !queryDto?.offset) {
+        throw new BadRequestException(ErrMessage.INVALID_PARAM);
+      }
+
       // groupId에 해당하는 cityId 가져오기
       const cityIds = (
         await this.recordRepository.findCitiesByGroupId(queryDto.groupId)
       ).map((city) => city.id);
 
-      return await this.findMapByGroup(userId, cityIds);
+      return await this.findMapByGroup(
+        userId,
+        cityIds,
+        queryDto.page,
+        queryDto.offset,
+      );
     }
 
     // cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
@@ -328,10 +337,14 @@ export class RecordService {
   async findMapByGroup(
     userId: string,
     cityIds: number[],
+    page: number,
+    offset: number,
   ): Promise<{ data: CityMapResponseDto[] }> {
     const records = await this.recordRepository.findAllByCityIds(
       userId,
       cityIds,
+      page,
+      offset,
     );
 
     const data: CityMapResponseDto[] = [];
