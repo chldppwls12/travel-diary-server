@@ -34,8 +34,7 @@ import { IsExistDateQueryDto } from '@/record/dto/is-exist-date-query.dto';
 import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
 import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
 import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
-import { GroupMapResponseDto } from '@/record/dto/map/group-map-response.dto';
-import { CityMapResponseDto } from '@/record/dto/map/city-map-response.dto';
+import { GroupCityMapResponseDto } from '@/record/dto/map/group-city-map-response.dto';
 
 @ApiTags('records')
 @Controller('records')
@@ -80,7 +79,7 @@ export class RecordController {
     );
   }
 
-  @ApiExtraModels(FullMapResponseDto, GroupMapResponseDto, CityMapResponseDto)
+  @ApiExtraModels(FullMapResponseDto, GroupCityMapResponseDto)
   @ApiBearerAuth()
   @ApiOperation({ summary: '일기 지도 형식 조회 API' })
   @ApiOkResponse({
@@ -95,10 +94,7 @@ export class RecordController {
               $ref: getSchemaPath(FullMapResponseDto),
             },
             {
-              $ref: getSchemaPath(GroupMapResponseDto),
-            },
-            {
-              $ref: getSchemaPath(CityMapResponseDto),
+              $ref: getSchemaPath(GroupCityMapResponseDto),
             },
           ],
         },
@@ -111,14 +107,14 @@ export class RecordController {
     @Query() queryDto: FindMapQueryDto,
     @CurrentUser() user: TokenPayloadDto,
   ): Promise<{
-    data: FullMapResponseDto[] | GroupMapResponseDto[] | CityMapResponseDto[];
+    data: FullMapResponseDto[] | GroupCityMapResponseDto[];
   }> {
     // TODO: 변경 필요
-    if (queryDto?.groupId) {
-      queryDto.groupId = +queryDto.groupId;
-    }
     if (queryDto?.provinceId) {
       queryDto.provinceId = +queryDto.provinceId;
+    }
+    if (queryDto?.groupId) {
+      queryDto.groupId = +queryDto.groupId;
     }
     if (queryDto?.cityId) {
       queryDto.cityId = +queryDto.cityId;

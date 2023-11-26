@@ -94,10 +94,13 @@ export class RecordRepository {
 
   async findById(
     recordId: string,
-  ): Promise<Prisma.RecordGetPayload<{ include: { files: true } }>> {
+  ): Promise<
+    Prisma.RecordGetPayload<{ include: { files: true; city: true } }>
+  > {
     return this.prisma.record.findFirst({
       include: {
         files: true,
+        city: true,
       },
       where: {
         id: recordId,
@@ -292,11 +295,9 @@ export class RecordRepository {
     userId: string,
     groupIds: number[],
   ): Promise<any[]> {
-    const formattedGroupIds = groupIds.join(', ');
-
     return this.prisma.$queryRaw`
         SELECT group_id AS groupId, record_id AS recordId, MAX(created_at) as createdAt FROM RecordGroup
-        WHERE user_id = ${userId} AND group_id IN (${formattedGroupIds})
+        WHERE user_id = ${userId} AND group_id IN (${Prisma.join(groupIds)})
         GROUP BY group_id
     `;
   }
@@ -306,8 +307,8 @@ export class RecordRepository {
     year: number,
     month: number,
   ): Promise<Record[]> {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 0));
 
     return this.prisma.record.findMany({
       where: {

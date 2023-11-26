@@ -16,9 +16,8 @@ import { RecordVoiceResponseDto } from '@/record/dto/record-voice-response.dto';
 import { UpdateRecordRequestDto } from '@/record/dto/update-record-request.dto';
 import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
 import { FindMapQueryDto } from '@/record/dto/find-map-query.dto';
-import { CityMapResponseDto } from '@/record/dto/map/city-map-response.dto';
+import { GroupCityMapResponseDto } from '@/record/dto/map/group-city-map-response.dto';
 import { LastImageResponseDto } from '@/record/dto/map/last-image-response.dto';
-import { GroupMapResponseDto } from '@/record/dto/map/group-map-response.dto';
 import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
 import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
 
@@ -250,7 +249,7 @@ export class RecordService {
     userId: string,
     queryDto: FindMapQueryDto,
   ): Promise<{
-    data: FullMapResponseDto[] | GroupMapResponseDto[] | CityMapResponseDto[];
+    data: FullMapResponseDto[] | GroupCityMapResponseDto[];
   }> {
     // 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
     if (!queryDto?.provinceId && !queryDto?.groupId && !queryDto?.cityId) {
@@ -268,14 +267,18 @@ export class RecordService {
         await this.recordRepository.findFirstRecordByGroup(userId, groupIds)
       ).map((record) => [record.recordId, record.groupId]);
 
-      const data: GroupMapResponseDto[] = [];
+      const data: GroupCityMapResponseDto[] = [];
       for (const [recordId, groupId] of recordWithGroup) {
         const record = await this.recordRepository.findById(recordId);
 
         data.push({
           id: record.id,
           image: await this.findRecordThumbnail(record.id),
-          groupId: groupId,
+          provinceId: record.provinceId,
+          city: {
+            id: record.cityId,
+            name: record.city.name,
+          },
         });
       }
 
@@ -339,7 +342,7 @@ export class RecordService {
     cityIds: number[],
     page: number,
     offset: number,
-  ): Promise<{ data: CityMapResponseDto[] }> {
+  ): Promise<{ data: GroupCityMapResponseDto[] }> {
     const records = await this.recordRepository.findAllByCityIds(
       userId,
       cityIds,
@@ -347,7 +350,7 @@ export class RecordService {
       offset,
     );
 
-    const data: CityMapResponseDto[] = [];
+    const data: GroupCityMapResponseDto[] = [];
     for (const record of records) {
       data.push({
         id: record.id,
@@ -391,7 +394,7 @@ export class RecordService {
     cityId: number,
     page: number,
     offset: number,
-  ): Promise<{ data: CityMapResponseDto[] }> {
+  ): Promise<{ data: GroupCityMapResponseDto[] }> {
     const records = await this.recordRepository.findAllbyCityId(
       userId,
       cityId,
@@ -399,7 +402,7 @@ export class RecordService {
       offset,
     );
 
-    const data: CityMapResponseDto[] = [];
+    const data: GroupCityMapResponseDto[] = [];
     for (const record of records) {
       data.push({
         id: record.id,

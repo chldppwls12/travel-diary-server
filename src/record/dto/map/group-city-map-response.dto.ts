@@ -13,7 +13,7 @@ class CityResponseDto {
   name: string;
 }
 
-export class CityMapResponseDto extends MapResponseDto {
+export class GroupCityMapResponseDto extends MapResponseDto {
   @ApiProperty({
     description: 'province id',
   })
