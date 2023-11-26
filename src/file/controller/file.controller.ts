@@ -25,10 +25,6 @@ export class FileController {
           type: 'string',
           format: 'binary',
         },
-        video: {
-          type: 'string',
-          format: 'binary',
-        },
         voice: {
           type: 'string',
           format: 'binary',
@@ -40,10 +36,6 @@ export class FileController {
     FileFieldsInterceptor([
       {
         name: 'image',
-        maxCount: 1,
-      },
-      {
-        name: 'video',
         maxCount: 1,
       },
       {
