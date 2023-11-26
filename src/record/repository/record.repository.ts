@@ -109,11 +109,11 @@ export class RecordRepository {
     });
   }
 
-  async deleteRecordFile(recordId: string, fileId: string): Promise<void> {
+  async deleteRecordFile(recordId: string, type: FileType): Promise<void> {
     await this.prisma.recordFile.deleteMany({
       where: {
         recordId,
-        fileId,
+        type,
       },
     });
   }
