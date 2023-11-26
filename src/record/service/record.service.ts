@@ -227,21 +227,21 @@ export class RecordService {
 
     if (requestDto?.medias) {
       await this.validateMediaFiles(requestDto.medias);
-      for (const mediaId of requestDto.medias) {
-        // 기존 media 삭제하기 -> 현재는 VIDEO 없기에 IMAGE만 삭제
-        await this.recordRepository.deleteRecordFile(recordId, FileType.IMAGE);
 
-        // 입력받은 것 추가하기
-        for (const [order, imageId] of requestDto.medias.entries()) {
-          await this.recordRepository.createRecordFileWithImage(
-            recordId,
-            imageId,
-            order + 1,
-          );
-        }
+      // 기존 media 삭제하기 -> 현재는 VIDEO 없기에 IMAGE만 삭제
+      await this.recordRepository.deleteRecordFile(recordId, FileType.IMAGE);
+
+      // 입력받은 것 추가하기
+      for (const [order, imageId] of requestDto.medias.entries()) {
+        await this.recordRepository.createRecordFileWithImage(
+          recordId,
+          imageId,
+          order + 1,
+        );
       }
       delete requestDto.medias;
     }
+
     if (requestDto?.voice) {
       await this.validateVoiceFile(requestDto.voice);
       await this.recordRepository.deleteRecordFile(recordId, FileType.VIDEO);
