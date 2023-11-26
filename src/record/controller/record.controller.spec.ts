@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RecordController } from './record.controller';
+import { RecordController } from '@/record/controller/record.controller';
 
 describe('RecordController', () => {
   let controller: RecordController;

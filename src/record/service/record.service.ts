@@ -4,23 +4,23 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
-import { RecordRepository } from '../repository/record.repository';
-import { FileRepository } from '../../file/repository/file.repository';
-import { ErrMessage } from '../../common/enum/err-message';
-import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { FindRecordResponseDto } from '../dto/find-record-response.dto';
-import { City, FileType, Record } from '@prisma/client';
-import { RecordMediaResponseDto } from '../dto/record-media-response.dto';
-import { RecordVoiceResponseDto } from '../dto/record-voice-response.dto';
-import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
-import { FullMapResponseDto } from '../dto/map/full-map-response.dto';
-import { FindMapQueryDto } from '../dto/find-map-query.dto';
-import { CityMapResponseDto } from '../dto/map/city-map-response.dto';
-import { LastImageResponseDto } from '../dto/map/last-image-response.dto';
-import { GroupMapResponseDto } from '../dto/map/group-map-response.dto';
-import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
-import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
+import { CreateRecordRequestDto } from '@/record/dto/create-record-request.dto';
+import { RecordRepository } from '@/record/repository/record.repository';
+import { FileRepository } from '@/file/repository/file.repository';
+import { ErrMessage } from '@/common/enum/err-message';
+import { IdResponseDto } from '@/common/dto/id-response.dto';
+import { FindRecordResponseDto } from '@/record/dto/find-record-response.dto';
+import { FileType } from '@prisma/client';
+import { RecordMediaResponseDto } from '@/record/dto/record-media-response.dto';
+import { RecordVoiceResponseDto } from '@/record/dto/record-voice-response.dto';
+import { UpdateRecordRequestDto } from '@/record/dto/update-record-request.dto';
+import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
+import { FindMapQueryDto } from '@/record/dto/find-map-query.dto';
+import { GroupCityMapResponseDto } from '@/record/dto/map/group-city-map-response.dto';
+import { LastImageResponseDto } from '@/record/dto/map/last-image-response.dto';
+import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
+import { ProvinceMapResponseDto } from '@/record/dto/map/province-map-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -219,16 +219,36 @@ export class RecordService {
 
     let provinceId = undefined;
 
+    if (requestDto?.recordDate) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      requestDto.recordDate = new Date(requestDto.recordDate);
+    }
+
     if (requestDto?.medias) {
       await this.validateMediaFiles(requestDto.medias);
-      for (const mediaId of requestDto.medias) {
-        await this.recordRepository.deleteRecordFile(recordId, mediaId);
+
+      // 기존 media 삭제하기 -> 현재는 VIDEO 없기에 IMAGE만 삭제
+      await this.recordRepository.deleteRecordFile(recordId, FileType.IMAGE);
+
+      // 입력받은 것 추가하기
+      for (const [order, imageId] of requestDto.medias.entries()) {
+        await this.recordRepository.createRecordFileWithImage(
+          recordId,
+          imageId,
+          order + 1,
+        );
       }
       delete requestDto.medias;
     }
+
     if (requestDto?.voice) {
       await this.validateVoiceFile(requestDto.voice);
-      await this.recordRepository.deleteRecordFile(recordId, requestDto.voice);
+      await this.recordRepository.deleteRecordFile(recordId, FileType.VIDEO);
+      await this.recordRepository.createRecordFileWithVoice(
+        recordId,
+        requestDto.voice,
+      );
       delete requestDto.voice;
     }
     if (requestDto?.cityId) {
@@ -249,13 +269,18 @@ export class RecordService {
   async findAllWithMap(
     userId: string,
     queryDto: FindMapQueryDto,
-  ): Promise<any> {
+  ): Promise<{
+    data:
+      | FullMapResponseDto[]
+      | ProvinceMapResponseDto[]
+      | GroupCityMapResponseDto[];
+  }> {
     // 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
     if (!queryDto?.provinceId && !queryDto?.groupId && !queryDto?.cityId) {
       return await this.findFullMap(userId);
     }
 
-    // TODO: provinceId 넣었을 때 특정 위치 조회 -> 각각의 group마다 최근 작성 글 1개 씩
+    // provinceId 넣었을 때 특정 위치 조회 -> 각각의 group마다 최근 작성 글 1개 씩
     if (queryDto.provinceId) {
       const groupIds = (
         await this.recordRepository.findGroupsByProvinceId(queryDto.provinceId)
@@ -266,16 +291,17 @@ export class RecordService {
         await this.recordRepository.findFirstRecordByGroup(userId, groupIds)
       ).map((record) => [record.recordId, record.groupId]);
 
-      const data: GroupMapResponseDto[] = [];
+      const data: ProvinceMapResponseDto[] = [];
       for (const [recordId, groupId] of recordWithGroup) {
         const record = await this.recordRepository.findById(recordId);
 
         data.push({
           id: record.id,
           image: await this.findRecordThumbnail(record.id),
-          groupId: groupId,
+          groupId,
         });
       }
+
       return {
         data,
       };
@@ -283,12 +309,21 @@ export class RecordService {
 
     // groupId 넣었을 때 특정 위치 조회 -> 각각의 city마다 최근 작성 글 1개 씩
     if (queryDto.groupId) {
+      if (!queryDto?.page || !queryDto?.offset) {
+        throw new BadRequestException(ErrMessage.INVALID_PARAM);
+      }
+
       // groupId에 해당하는 cityId 가져오기
       const cityIds = (
         await this.recordRepository.findCitiesByGroupId(queryDto.groupId)
       ).map((city) => city.id);
 
-      return await this.findMapByGroup(userId, cityIds);
+      return await this.findMapByGroup(
+        userId,
+        cityIds,
+        queryDto.page,
+        queryDto.offset,
+      );
     }
 
     // cityId 넣었을 때 특정 위치 조회 -> 해당 city의 모든 게시글 (페이지네이션)
@@ -325,18 +360,26 @@ export class RecordService {
   async findMapByGroup(
     userId: string,
     cityIds: number[],
-  ): Promise<{ data: CityMapResponseDto[] }> {
+    page: number,
+    offset: number,
+  ): Promise<{ data: GroupCityMapResponseDto[] }> {
     const records = await this.recordRepository.findAllByCityIds(
       userId,
       cityIds,
+      page,
+      offset,
     );
 
-    const data: CityMapResponseDto[] = [];
+    const data: GroupCityMapResponseDto[] = [];
     for (const record of records) {
       data.push({
         id: record.id,
         image: await this.findRecordThumbnail(record.id),
-        cityId: record.cityId,
+        provinceId: record.provinceId,
+        city: {
+          id: record.cityId,
+          name: record.city.name,
+        },
       });
     }
 
@@ -371,7 +414,7 @@ export class RecordService {
     cityId: number,
     page: number,
     offset: number,
-  ): Promise<{ data: CityMapResponseDto[] }> {
+  ): Promise<{ data: GroupCityMapResponseDto[] }> {
     const records = await this.recordRepository.findAllbyCityId(
       userId,
       cityId,
@@ -379,12 +422,16 @@ export class RecordService {
       offset,
     );
 
-    const data: CityMapResponseDto[] = [];
+    const data: GroupCityMapResponseDto[] = [];
     for (const record of records) {
       data.push({
         id: record.id,
         image: await this.findRecordThumbnail(record.id),
-        cityId: record.cityId,
+        provinceId: record.provinceId,
+        city: {
+          id: record.cityId,
+          name: record.city.name,
+        },
       });
     }
 

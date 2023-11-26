@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Feeling, Weather } from '@prisma/client';
-import { RecordMediaResponseDto } from './record-media-response.dto';
-import { RecordVoiceResponseDto } from './record-voice-response.dto';
+import { RecordMediaResponseDto } from '@/record/dto/record-media-response.dto';
+import { RecordVoiceResponseDto } from '@/record/dto/record-voice-response.dto';
 
 export class FindRecordResponseDto {
   @ApiProperty({

@@ -6,33 +6,36 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CreateRecordRequestDto } from '../dto/create-record-request.dto';
-import { RecordService } from '../service/record.service';
+import { CreateRecordRequestDto } from '@/record/dto/create-record-request.dto';
+import { RecordService } from '@/record/service/record.service';
 import {
   ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
+  ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorator/current-user.decorator';
-import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
-import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { FindRecordResponseDto } from '../dto/find-record-response.dto';
-import { UpdateRecordRequestDto } from '../dto/update-record-request.dto';
-import { FindMapQueryDto } from '../dto/find-map-query.dto';
-import { IsExistDateQueryDto } from '../dto/is-exist-date-query.dto';
-import { FindCalanderQueryDto } from '../dto/find-calander-query.dto';
-import { FindCalendarResponseDto } from '../dto/find-calendar-response.dto';
+import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
+import { CurrentUser } from '@/auth/decorator/current-user.decorator';
+import { TokenPayloadDto } from '@/auth/dto/token-payload.dto';
+import { IdResponseDto } from '@/common/dto/id-response.dto';
+import { FindRecordResponseDto } from '@/record/dto/find-record-response.dto';
+import { UpdateRecordRequestDto } from '@/record/dto/update-record-request.dto';
+import { FindMapQueryDto } from '@/record/dto/find-map-query.dto';
+import { IsExistDateQueryDto } from '@/record/dto/is-exist-date-query.dto';
+import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
+import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
+import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
+import { GroupCityMapResponseDto } from '@/record/dto/map/group-city-map-response.dto';
+import { ProvinceMapResponseDto } from '@/record/dto/map/province-map-response.dto';
 
 @ApiTags('records')
 @Controller('records')
@@ -77,24 +80,52 @@ export class RecordController {
     );
   }
 
+  @ApiExtraModels(
+    FullMapResponseDto,
+    ProvinceMapResponseDto,
+    GroupCityMapResponseDto,
+  )
   @ApiBearerAuth()
   @ApiOperation({ summary: '일기 지도 형식 조회 API' })
   @ApiOkResponse({
     status: 200,
     description: '일기 지도 형식 조회 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          oneOf: [
+            {
+              $ref: getSchemaPath(FullMapResponseDto),
+            },
+            {
+              $ref: getSchemaPath(ProvinceMapResponseDto),
+            },
+            {
+              $ref: getSchemaPath(GroupCityMapResponseDto),
+            },
+          ],
+        },
+      },
+    },
   })
   @UseGuards(JwtAuthGuard)
   @Get('/map')
   async findAllWithMap(
     @Query() queryDto: FindMapQueryDto,
     @CurrentUser() user: TokenPayloadDto,
-  ): Promise<any> {
+  ): Promise<{
+    data:
+      | FullMapResponseDto[]
+      | ProvinceMapResponseDto[]
+      | GroupCityMapResponseDto[];
+  }> {
     // TODO: 변경 필요
-    if (queryDto?.groupId) {
-      queryDto.groupId = +queryDto.groupId;
-    }
     if (queryDto?.provinceId) {
       queryDto.provinceId = +queryDto.provinceId;
+    }
+    if (queryDto?.groupId) {
+      queryDto.groupId = +queryDto.groupId;
     }
     if (queryDto?.cityId) {
       queryDto.cityId = +queryDto.cityId;

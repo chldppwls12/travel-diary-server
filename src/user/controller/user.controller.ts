@@ -12,10 +12,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
-import { CurrentUser } from '../../auth/decorator/current-user.decorator';
-import { UserService } from '../service/user.service';
-import { TokenPayloadDto } from '../../auth/dto/token-payload.dto';
+import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
+import { CurrentUser } from '@/auth/decorator/current-user.decorator';
+import { UserService } from '@/user/service/user.service';
+import { TokenPayloadDto } from '@/auth/dto/token-payload.dto';
 
 @ApiTags('users')
 @Controller('users')

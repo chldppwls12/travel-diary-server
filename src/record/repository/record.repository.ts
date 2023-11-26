@@ -1,8 +1,8 @@
-import { PrismaService } from '../../prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { CreateRecordDto } from '../dto/create-record.dto';
-import { Status, Record, FileType, Prisma, RecordFile } from '@prisma/client';
+import { Status, Record, FileType, Prisma } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
-import { UpdateRecordDto } from '../dto/update-record.dto';
+import { UpdateRecordDto } from '@/record/dto/update-record.dto';
 
 @Injectable()
 export class RecordRepository {
@@ -94,10 +94,13 @@ export class RecordRepository {
 
   async findById(
     recordId: string,
-  ): Promise<Prisma.RecordGetPayload<{ include: { files: true } }>> {
+  ): Promise<
+    Prisma.RecordGetPayload<{ include: { files: true; city: true } }>
+  > {
     return this.prisma.record.findFirst({
       include: {
         files: true,
+        city: true,
       },
       where: {
         id: recordId,
@@ -106,11 +109,11 @@ export class RecordRepository {
     });
   }
 
-  async deleteRecordFile(recordId: string, fileId: string): Promise<void> {
+  async deleteRecordFile(recordId: string, type: FileType): Promise<void> {
     await this.prisma.recordFile.deleteMany({
       where: {
         recordId,
-        fileId,
+        type,
       },
     });
   }
@@ -202,7 +205,12 @@ export class RecordRepository {
     });
   }
 
-  async findAllByCityIds(userId: string, cityIds: number[]): Promise<Record[]> {
+  async findAllByCityIds(
+    userId: string,
+    cityIds: number[],
+    page: number,
+    offset: number,
+  ): Promise<any[]> {
     return this.prisma.record.findMany({
       where: {
         userId,
@@ -211,6 +219,11 @@ export class RecordRepository {
         },
         status: Status.NORMAL,
       },
+      include: {
+        city: true,
+      },
+      skip: (page - 1) * offset,
+      take: offset,
     });
   }
 
@@ -231,6 +244,9 @@ export class RecordRepository {
       },
       skip: (page - 1) * offset,
       take: offset,
+      include: {
+        city: true,
+      },
     });
   }
 
@@ -279,11 +295,9 @@ export class RecordRepository {
     userId: string,
     groupIds: number[],
   ): Promise<any[]> {
-    const formattedGroupIds = groupIds.join(', ');
-
     return this.prisma.$queryRaw`
         SELECT group_id AS groupId, record_id AS recordId, MAX(created_at) as createdAt FROM RecordGroup
-        WHERE user_id = ${userId} AND group_id IN (${formattedGroupIds})
+        WHERE user_id = ${userId} AND group_id IN (${Prisma.join(groupIds)})
         GROUP BY group_id
     `;
   }
@@ -293,8 +307,8 @@ export class RecordRepository {
     year: number,
     month: number,
   ): Promise<Record[]> {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0);
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
+    const endDate = new Date(Date.UTC(year, month, 0));
 
     return this.prisma.record.findMany({
       where: {
