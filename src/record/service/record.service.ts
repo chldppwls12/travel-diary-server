@@ -20,6 +20,7 @@ import { GroupCityMapResponseDto } from '@/record/dto/map/group-city-map-respons
 import { LastImageResponseDto } from '@/record/dto/map/last-image-response.dto';
 import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
 import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
+import { ProvinceMapResponseDto } from '@/record/dto/map/province-map-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -249,7 +250,10 @@ export class RecordService {
     userId: string,
     queryDto: FindMapQueryDto,
   ): Promise<{
-    data: FullMapResponseDto[] | GroupCityMapResponseDto[];
+    data:
+      | FullMapResponseDto[]
+      | ProvinceMapResponseDto[]
+      | GroupCityMapResponseDto[];
   }> {
     // 전체 지도 조회 -> 각각의 province마다 최근 작성 글 1개 씩
     if (!queryDto?.provinceId && !queryDto?.groupId && !queryDto?.cityId) {
@@ -267,18 +271,14 @@ export class RecordService {
         await this.recordRepository.findFirstRecordByGroup(userId, groupIds)
       ).map((record) => [record.recordId, record.groupId]);
 
-      const data: GroupCityMapResponseDto[] = [];
+      const data: ProvinceMapResponseDto[] = [];
       for (const [recordId, groupId] of recordWithGroup) {
         const record = await this.recordRepository.findById(recordId);
 
         data.push({
           id: record.id,
           image: await this.findRecordThumbnail(record.id),
-          provinceId: record.provinceId,
-          city: {
-            id: record.cityId,
-            name: record.city.name,
-          },
+          groupId,
         });
       }
 
