@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
-import { AuthService } from '../service/auth.service';
-import { SignUpRequestDto } from '../dto/signup-request.dto';
+import { AuthService } from '@/auth/service/auth.service';
+import { SignUpRequestDto } from '@/auth/dto/signup-request.dto';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -11,14 +11,14 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { IdResponseDto } from '../../common/dto/id-response.dto';
-import { LoginRequestDto } from '../dto/login-request.dto';
-import { LocalAuthGuard } from '../guard/local-auth.guard';
-import { TokensResponseDto } from '../dto/tokens-response.dto';
-import { JwtAuthGuard } from '../guard/jwt-auth.guard';
-import { CurrentUser } from '../decorator/current-user.decorator';
-import { SendCodeRequestDto } from '../dto/send-code-request.dto';
-import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
+import { IdResponseDto } from '@/common/dto/id-response.dto';
+import { LoginRequestDto } from '@/auth/dto/login-request.dto';
+import { LocalAuthGuard } from '@/auth/guard/local-auth.guard';
+import { TokensResponseDto } from '@/auth/dto/tokens-response.dto';
+import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
+import { CurrentUser } from '@/auth/decorator/current-user.decorator';
+import { SendCodeRequestDto } from '@/auth/dto/send-code-request.dto';
+import { VerifyCodeRequestDto } from '@/auth/dto/verify-code-request.dto';
 
 @ApiTags('auth')
 @Controller('auth')

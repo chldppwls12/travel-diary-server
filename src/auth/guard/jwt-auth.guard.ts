@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { ErrMessage } from '../../common/enum/err-message';
+import { ErrMessage } from '@/common/enum/err-message';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
