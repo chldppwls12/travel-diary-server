@@ -21,6 +21,7 @@ import { LastImageResponseDto } from '@/record/dto/map/last-image-response.dto';
 import { FindCalanderQueryDto } from '@/record/dto/find-calander-query.dto';
 import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto';
 import { ProvinceMapResponseDto } from '@/record/dto/map/province-map-response.dto';
+import { GetTotalRecordResponseDto } from '@/record/dto/get-total-record-response.dto';
 
 @Injectable()
 export class RecordService {
@@ -466,6 +467,14 @@ export class RecordService {
     }
     return {
       data,
+    };
+  }
+
+  async getTotal(userId: string): Promise<GetTotalRecordResponseDto> {
+    const total = await this.recordRepository.getTotal(userId);
+
+    return {
+      total,
     };
   }
 }

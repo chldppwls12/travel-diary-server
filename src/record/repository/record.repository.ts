@@ -321,4 +321,13 @@ export class RecordRepository {
       },
     });
   }
+
+  async getTotal(userId: string): Promise<number> {
+    return this.prisma.record.count({
+      where: {
+        userId,
+        status: Status.NORMAL,
+      },
+    });
+  }
 }
