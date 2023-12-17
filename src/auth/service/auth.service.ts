@@ -96,10 +96,12 @@ export class AuthService {
   }
 
   async verifyCode(requestDto: VerifyCodeRequestDto): Promise<void> {
-    const { email, code } = requestDto;
+    const { email, code, type } = requestDto;
 
-    if (await this.userRepository.findUserByEmail(email)) {
-      throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
+    if (type === CodeType.REGISTER) {
+      if (await this.userRepository.isExistEmail(email)) {
+        throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
+      }
     }
 
     if (
