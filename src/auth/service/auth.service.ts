@@ -19,6 +19,7 @@ import { CurrentUserDto } from '@/common/dto/current-user.dto';
 import { SendCodeRequestDto } from '../dto/send-code-request.dto';
 import { MailService } from '@/mail/service/mail.service';
 import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
+import { CodeType } from '@/common/enum/code-type';
 
 @Injectable()
 export class AuthService {
@@ -78,7 +79,13 @@ export class AuthService {
   }
 
   async sendCode(requestDto: SendCodeRequestDto): Promise<void> {
-    const { email } = requestDto;
+    const { email, type } = requestDto;
+
+    if (type === CodeType.REGISTER) {
+      if (await this.userRepository.isExistEmail(email)) {
+        throw new ConflictException(ErrMessage.INVALID_EMAIL);
+      }
+    }
 
     const randomCode = await this.mailService.sendCode(email);
     await this.cacheService.set(

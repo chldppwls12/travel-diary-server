@@ -25,7 +25,7 @@ export class MailService {
 
       const mailOptions = {
         to: email,
-        subject: '[Traily] 회원가입 이메일 인증 메일입니다.',
+        subject: '[Traily] 인증번호 안내 메일',
         html: `인증번호 : ${randomCode}</a>`,
       };
 
