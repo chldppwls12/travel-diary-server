@@ -19,6 +19,7 @@ import { JwtAuthGuard } from '@/auth/guard/jwt-auth.guard';
 import { CurrentUser } from '@/auth/decorator/current-user.decorator';
 import { SendCodeRequestDto } from '@/auth/dto/send-code-request.dto';
 import { VerifyCodeRequestDto } from '@/auth/dto/verify-code-request.dto';
+import { UpdatePasswordRequestDto } from '@/auth/dto/update-password-request.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -98,5 +99,24 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async reissueTokens(@CurrentUser() user): Promise<TokensResponseDto> {
     return this.authService.reissueTokens(user);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '비밀번호 변경 API' })
+  @ApiCreatedResponse({
+    status: 200,
+    description: '비밀번호 변경 성공',
+  })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: '유효하지 않은 토큰',
+  })
+  @Post('password')
+  @UseGuards(JwtAuthGuard)
+  async resetPassword(
+    @Body() requestDto: UpdatePasswordRequestDto,
+    @CurrentUser() user,
+  ): Promise<void> {
+    return this.authService.resetPassword(user, requestDto);
   }
 }

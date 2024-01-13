@@ -20,6 +20,8 @@ import { SendCodeRequestDto } from '../dto/send-code-request.dto';
 import { MailService } from '@/mail/service/mail.service';
 import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
 import { CodeType } from '@/common/enum/code-type';
+import { UpdatePasswordRequestDto } from '@/auth/dto/update-password-request.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -140,5 +142,22 @@ export class AuthService {
       userId,
       email: user.email,
     });
+  }
+
+  async resetPassword(
+    user: CurrentUserDto,
+    requestDto: UpdatePasswordRequestDto,
+  ): Promise<void> {
+    const { prevPassword, newPassword } = requestDto;
+
+    const { password } = await this.userRepository.findUserById(user.userId);
+    if (!(await bcrypt.compare(prevPassword, password))) {
+      throw new BadRequestException(ErrMessage.INVALID_PASSWORD);
+    }
+
+    await this.userRepository.resetPassword(
+      user.userId,
+      await bcrypt.hash(newPassword, 10),
+    );
   }
 }
