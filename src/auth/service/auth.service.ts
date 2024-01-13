@@ -21,7 +21,6 @@ import { MailService } from '@/mail/service/mail.service';
 import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
 import { CodeType } from '@/common/enum/code-type';
 import { UpdatePasswordRequestDto } from '@/auth/dto/update-password-request.dto';
-import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -45,7 +44,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<void> {
     // email 검증
     if (!(await this.userRepository.isExistEmail(email))) {
-      throw new ConflictException(ErrMessage.INVALID_EMAIL);
+      throw new UnauthorizedException(ErrMessage.INVALID_EMAIL);
     }
 
     // password 검증
@@ -85,16 +84,25 @@ export class AuthService {
 
     if (type === CodeType.REGISTER) {
       if (await this.userRepository.isExistEmail(email)) {
-        throw new ConflictException(ErrMessage.INVALID_EMAIL);
+        throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
       }
-    }
 
-    const randomCode = await this.mailService.sendCode(email);
-    await this.cacheService.set(
-      `${RedisKey.EMAIL_CODE_KEY}:${email}`,
-      randomCode.toString(),
-      60 * 3,
-    );
+      const randomCode = await this.mailService.sendCode(email);
+      await this.cacheService.set(
+        `${RedisKey.EMAIL_CODE_KEY}:${email}`,
+        randomCode.toString(),
+        60 * 3,
+      );
+    } else if (type === CodeType.RESET_PASSWORD) {
+      const randomPassword = Math.random().toString(36).slice(2, 8);
+
+      await this.userRepository.resetPasswordByEmail(
+        email,
+        await bcrypt.hash(randomPassword, 10),
+      );
+
+      await this.mailService.sendResetPassword(email, randomPassword);
+    }
   }
 
   async verifyCode(requestDto: VerifyCodeRequestDto): Promise<void> {
@@ -152,7 +160,7 @@ export class AuthService {
 
     const { password } = await this.userRepository.findUserById(user.userId);
     if (!(await bcrypt.compare(prevPassword, password))) {
-      throw new BadRequestException(ErrMessage.INVALID_PASSWORD);
+      throw new UnauthorizedException(ErrMessage.INVALID_PASSWORD);
     }
 
     await this.userRepository.resetPassword(

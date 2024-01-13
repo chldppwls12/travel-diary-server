@@ -65,4 +65,16 @@ export class UserRepository {
       },
     });
   }
+
+  async resetPasswordByEmail(email: string, password: string): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        email,
+        status: Status.NORMAL,
+      },
+      data: {
+        password,
+      },
+    });
+  }
 }
