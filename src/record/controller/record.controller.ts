@@ -36,6 +36,7 @@ import { FindCalendarResponseDto } from '@/record/dto/find-calendar-response.dto
 import { FullMapResponseDto } from '@/record/dto/map/full-map-response.dto';
 import { GroupCityMapResponseDto } from '@/record/dto/map/group-city-map-response.dto';
 import { ProvinceMapResponseDto } from '@/record/dto/map/province-map-response.dto';
+import { GetTotalRecordResponseDto } from '@/record/dto/get-total-record-response.dto';
 
 @ApiTags('records')
 @Controller('records')
@@ -151,6 +152,21 @@ export class RecordController {
     @CurrentUser() user: TokenPayloadDto,
   ): Promise<{ data: FindCalendarResponseDto[] }> {
     return this.recordService.findCalendar(user.userId, queryDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '총 일기 개수 조회 API' })
+  @ApiOkResponse({
+    status: 200,
+    description: '총 일기 개수 조회 성공',
+    type: GetTotalRecordResponseDto,
+  })
+  @UseGuards(JwtAuthGuard)
+  @Get('/total')
+  async getTotal(
+    @CurrentUser() user: TokenPayloadDto,
+  ): Promise<GetTotalRecordResponseDto> {
+    return await this.recordService.getTotal(user.userId);
   }
 
   @ApiBearerAuth()
