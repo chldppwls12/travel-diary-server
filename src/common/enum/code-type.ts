@@ -1,0 +1,4 @@
+export enum CodeType {
+  REGISTER = 'REGISTER',
+  RESET_PASSWORD = 'RESET_PASSWORD',
+}

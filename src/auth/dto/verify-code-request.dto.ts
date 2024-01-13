@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty } from 'class-validator';
+import { CodeType } from '@/common/enum/code-type';
 
 export class VerifyCodeRequestDto {
   @ApiProperty({
@@ -14,4 +15,11 @@ export class VerifyCodeRequestDto {
   })
   @IsNotEmpty()
   code: string;
+
+  @ApiProperty({
+    description: 'type',
+    enum: CodeType,
+  })
+  @IsEnum(CodeType)
+  type: CodeType;
 }

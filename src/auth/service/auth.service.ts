@@ -19,6 +19,8 @@ import { CurrentUserDto } from '@/common/dto/current-user.dto';
 import { SendCodeRequestDto } from '../dto/send-code-request.dto';
 import { MailService } from '@/mail/service/mail.service';
 import { VerifyCodeRequestDto } from '../dto/verify-code-request.dto';
+import { CodeType } from '@/common/enum/code-type';
+import { UpdatePasswordRequestDto } from '@/auth/dto/update-password-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -42,7 +44,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<void> {
     // email 검증
     if (!(await this.userRepository.isExistEmail(email))) {
-      throw new ConflictException(ErrMessage.INVALID_EMAIL);
+      throw new UnauthorizedException(ErrMessage.INVALID_EMAIL);
     }
 
     // password 검증
@@ -78,21 +80,38 @@ export class AuthService {
   }
 
   async sendCode(requestDto: SendCodeRequestDto): Promise<void> {
-    const { email } = requestDto;
+    const { email, type } = requestDto;
 
-    const randomCode = await this.mailService.sendCode(email);
-    await this.cacheService.set(
-      `${RedisKey.EMAIL_CODE_KEY}:${email}`,
-      randomCode.toString(),
-      60 * 3,
-    );
+    if (type === CodeType.REGISTER) {
+      if (await this.userRepository.isExistEmail(email)) {
+        throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
+      }
+
+      const randomCode = await this.mailService.sendCode(email);
+      await this.cacheService.set(
+        `${RedisKey.EMAIL_CODE_KEY}:${email}`,
+        randomCode.toString(),
+        60 * 3,
+      );
+    } else if (type === CodeType.RESET_PASSWORD) {
+      const randomPassword = Math.random().toString(36).slice(2, 8);
+
+      await this.userRepository.resetPasswordByEmail(
+        email,
+        await bcrypt.hash(randomPassword, 10),
+      );
+
+      await this.mailService.sendResetPassword(email, randomPassword);
+    }
   }
 
   async verifyCode(requestDto: VerifyCodeRequestDto): Promise<void> {
-    const { email, code } = requestDto;
+    const { email, code, type } = requestDto;
 
-    if (await this.userRepository.findUserByEmail(email)) {
-      throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
+    if (type === CodeType.REGISTER) {
+      if (await this.userRepository.isExistEmail(email)) {
+        throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
+      }
     }
 
     if (
@@ -131,5 +150,22 @@ export class AuthService {
       userId,
       email: user.email,
     });
+  }
+
+  async resetPassword(
+    user: CurrentUserDto,
+    requestDto: UpdatePasswordRequestDto,
+  ): Promise<void> {
+    const { prevPassword, newPassword } = requestDto;
+
+    const { password } = await this.userRepository.findUserById(user.userId);
+    if (!(await bcrypt.compare(prevPassword, password))) {
+      throw new UnauthorizedException(ErrMessage.INVALID_PASSWORD);
+    }
+
+    await this.userRepository.resetPassword(
+      user.userId,
+      await bcrypt.hash(newPassword, 10),
+    );
   }
 }

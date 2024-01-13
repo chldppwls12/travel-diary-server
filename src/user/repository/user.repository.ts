@@ -45,4 +45,36 @@ export class UserRepository {
       },
     });
   }
+
+  async resetPassword(userId: string, password: string): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        password,
+      },
+    });
+  }
+
+  async findUserById(userId: string): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        status: Status.NORMAL,
+      },
+    });
+  }
+
+  async resetPasswordByEmail(email: string, password: string): Promise<void> {
+    await this.prisma.user.update({
+      where: {
+        email,
+        status: Status.NORMAL,
+      },
+      data: {
+        password,
+      },
+    });
+  }
 }

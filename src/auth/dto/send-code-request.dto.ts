@@ -1,5 +1,6 @@
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { CodeType } from '@/common/enum/code-type';
 
 export class SendCodeRequestDto {
   @ApiProperty({
@@ -7,4 +8,11 @@ export class SendCodeRequestDto {
   })
   @IsEmail()
   email: string;
+
+  @ApiProperty({
+    description: 'type',
+    enum: CodeType,
+  })
+  @IsEnum(CodeType)
+  type: CodeType;
 }
