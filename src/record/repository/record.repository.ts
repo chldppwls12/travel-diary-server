@@ -222,6 +222,9 @@ export class RecordRepository {
       include: {
         city: true,
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
       skip: (page - 1) * offset,
       take: offset,
     });
@@ -260,6 +263,7 @@ export class RecordRepository {
         recordDate: {
           equals: new Date(recordDate),
         },
+        status: Status.NORMAL,
       },
     }));
   }
