@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from '@/auth/service/auth.service';
 import { SignUpRequestDto } from '@/auth/dto/signup-request.dto';
 import {
@@ -111,12 +119,28 @@ export class AuthController {
     status: 401,
     description: '유효하지 않은 토큰',
   })
-  @Post('password')
+  @Patch('password')
   @UseGuards(JwtAuthGuard)
   async resetPassword(
     @Body() requestDto: UpdatePasswordRequestDto,
     @CurrentUser() user,
   ): Promise<void> {
     return this.authService.resetPassword(user, requestDto);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '비밀번호 재설정 API' })
+  @ApiCreatedResponse({
+    status: 200,
+    description: '비밀번호 재설정 성공',
+  })
+  @ApiUnauthorizedResponse({
+    status: 401,
+    description: '유효하지 않은 토큰',
+  })
+  @Patch('password/random')
+  @UseGuards(JwtAuthGuard)
+  async setRandomPassword(@CurrentUser() user): Promise<void> {
+    return this.authService.setRandomPassword(user);
   }
 }
