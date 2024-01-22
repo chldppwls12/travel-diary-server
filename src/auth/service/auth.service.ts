@@ -86,23 +86,18 @@ export class AuthService {
       if (await this.userRepository.isExistEmail(email)) {
         throw new ConflictException(ErrMessage.ALREADY_EXISTS_EMAIL);
       }
-
-      const randomCode = await this.mailService.sendCode(email);
-      await this.cacheService.set(
-        `${RedisKey.EMAIL_CODE_KEY}:${email}`,
-        randomCode.toString(),
-        60 * 3,
-      );
     } else if (type === CodeType.RESET_PASSWORD) {
-      const randomPassword = Math.random().toString(36).slice(2, 8);
-
-      await this.userRepository.resetPasswordByEmail(
-        email,
-        await bcrypt.hash(randomPassword, 10),
-      );
-
-      await this.mailService.sendResetPassword(email, randomPassword);
+      if (!(await this.userRepository.isExistEmail(email))) {
+        throw new UnauthorizedException(ErrMessage.INVALID_EMAIL);
+      }
     }
+
+    const randomCode = await this.mailService.sendCode(email);
+    await this.cacheService.set(
+      `${RedisKey.EMAIL_CODE_KEY}:${email}`,
+      randomCode.toString(),
+      60 * 3,
+    );
   }
 
   async verifyCode(requestDto: VerifyCodeRequestDto): Promise<void> {
@@ -167,5 +162,16 @@ export class AuthService {
       user.userId,
       await bcrypt.hash(newPassword, 10),
     );
+  }
+
+  async setRandomPassword(user: CurrentUserDto): Promise<void> {
+    const randomPassword = Math.random().toString(36).slice(2, 8);
+
+    await this.userRepository.resetPasswordByEmail(
+      user.email,
+      await bcrypt.hash(randomPassword, 10),
+    );
+
+    await this.mailService.sendResetPassword(user.email, randomPassword);
   }
 }
