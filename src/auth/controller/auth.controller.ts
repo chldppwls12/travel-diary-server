@@ -127,20 +127,4 @@ export class AuthController {
   ): Promise<void> {
     return this.authService.resetPassword(user, requestDto);
   }
-
-  @ApiBearerAuth()
-  @ApiOperation({ summary: '비밀번호 재설정 API' })
-  @ApiCreatedResponse({
-    status: 200,
-    description: '비밀번호 재설정 성공',
-  })
-  @ApiUnauthorizedResponse({
-    status: 401,
-    description: '유효하지 않은 토큰',
-  })
-  @Patch('password/random')
-  @UseGuards(JwtAuthGuard)
-  async setRandomPassword(@CurrentUser() user): Promise<void> {
-    return this.authService.setRandomPassword(user);
-  }
 }

@@ -115,6 +115,10 @@ export class AuthService {
     ) {
       throw new BadRequestException(ErrMessage.INVALID_CODE);
     }
+
+    if (type === CodeType.RESET_PASSWORD) {
+      await this.setRandomPassword(requestDto.email);
+    }
   }
 
   async signTokens(payload: TokensRequestDto): Promise<TokensResponseDto> {
@@ -164,14 +168,14 @@ export class AuthService {
     );
   }
 
-  async setRandomPassword(user: CurrentUserDto): Promise<void> {
+  async setRandomPassword(email: string): Promise<void> {
     const randomPassword = Math.random().toString(36).slice(2, 8);
 
     await this.userRepository.resetPasswordByEmail(
-      user.email,
+      email,
       await bcrypt.hash(randomPassword, 10),
     );
 
-    await this.mailService.sendResetPassword(user.email, randomPassword);
+    await this.mailService.sendResetPassword(email, randomPassword);
   }
 }
